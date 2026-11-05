@@ -1,0 +1,267 @@
+@model AgriSyncIndia.ViewModels.AnalyticsViewModel
+@{
+    ViewData["Title"] = "Historical Climate Analytics & Export";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-agri p-4 border-0">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <h4 class="fw-bold mb-1 text-dark">
+                        <i class="bi bi-graph-up-arrow text-success me-2"></i>Agro-Climatic Historical Analytics
+                    </h4>
+                    <p class="text-muted small mb-0">
+                        Multi-parameter diurnal telemetry analysis and ICAR Agromet compliance records.
+                    </p>
+                </div>
+
+                <!-- CSV Export Trigger Button -->
+                <div>
+                    <a asp-action="ExportCsv" 
+                       asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")" 
+                       asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")" 
+                       asp-route-zoneId="@Model.SelectedZoneId" 
+                       class="btn btn-outline-success d-flex align-items-center shadow-sm">
+                        <i class="bi bi-file-earmark-arrow-down-fill me-2 fs-5"></i>
+                        <span>Download CSV Telemetry Report</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Range & Zone Filter Form using ASP.NET Model Binding -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-agri p-3 border-0">
+            <form method="get" asp-action="Analytics" class="row g-3 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label asp-for="StartDate" class="form-label small fw-semibold text-muted"></label>
+                    <input asp-for="StartDate" class="form-control" type="date" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label asp-for="EndDate" class="form-label small fw-semibold text-muted"></label>
+                    <input asp-for="EndDate" class="form-control" type="date" />
+                </div>
+                <div class="col-12 col-md-4">
+                    <label asp-for="SelectedZoneId" class="form-label small fw-semibold text-muted">Agricultural Zone Filter</label>
+                    <select asp-for="SelectedZoneId" class="form-select">
+                        <option value="">-- All Farm Zones Aggregated --</option>
+                        @foreach (var z in Model.AvailableZones)
+                        {
+                            <option value="@z.ZoneId">@z.Name (@z.CropType)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-2">
+                    <button type="submit" class="btn btn-success w-100 fw-semibold">
+                        <i class="bi bi-filter me-1"></i> Apply Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Aggregated Statistical Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-2">
+        <div class="card card-agri p-3 border-0 text-center">
+            <span class="text-muted small">Mean Temp</span>
+            <h4 class="fw-bold mb-0 text-dark">@Model.AvgTemp<small class="fs-6 text-muted">°C</small></h4>
+            <span class="text-muted" style="font-size: 0.72rem;">Min: @Model.MinTemp° | Max: @Model.MaxTemp°</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card card-agri p-3 border-0 text-center">
+            <span class="text-muted small">Min Temp</span>
+            <h4 class="fw-bold mb-0 text-primary">@Model.MinTemp<small class="fs-6 text-muted">°C</small></h4>
+            <span class="text-muted" style="font-size: 0.72rem;">Pre-dawn low</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card card-agri p-3 border-0 text-center">
+            <span class="text-muted small">Max Temp</span>
+            <h4 class="fw-bold mb-0 text-danger">@Model.MaxTemp<small class="fs-6 text-muted">°C</small></h4>
+            <span class="text-muted" style="font-size: 0.72rem;">Afternoon peak</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card card-agri p-3 border-0 text-center">
+            <span class="text-muted small">Avg Relative Humidity</span>
+            <h4 class="fw-bold mb-0 text-info">@Model.AvgHumidity<small class="fs-6 text-muted">%</small></h4>
+            <span class="text-muted" style="font-size: 0.72rem;">Mean Moisture</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card card-agri p-3 border-0 text-center">
+            <span class="text-muted small">Mean VPD</span>
+            <h4 class="fw-bold mb-0 text-success">@Model.AvgVPD<small class="fs-6 text-muted"> kPa</small></h4>
+            <span class="text-success" style="font-size: 0.72rem;">Optimal Zone</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card card-agri p-3 border-0 text-center">
+            <span class="text-muted small">Avg Soil VWC</span>
+            <h4 class="fw-bold mb-0 text-warning">@Model.AvgSoilMoisture<small class="fs-6 text-muted">%</small></h4>
+            <span class="text-muted" style="font-size: 0.72rem;">Root Zone</span>
+        </div>
+    </div>
+</div>
+
+<!-- Historical Trend Multi-Axis Graph via Chart.js -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-agri p-4 border-0">
+            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-bezier2 text-primary me-2"></i>Multi-Parameter Historical Trend
+                </h5>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Temperature (°C)</span>
+                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">Relative Humidity (%)</span>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">VPD (kPa)</span>
+                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Soil Moisture (%)</span>
+                </div>
+            </div>
+
+            <div style="position: relative; height: 360px; width: 100%;">
+                <canvas id="historicalTrendsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabular Historical Sensor Logs (Recent 100 Records) -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-agri p-4 border-0 shadow-sm">
+            <h5 class="fw-bold mb-3 text-dark">
+                <i class="bi bi-table text-success me-2"></i>Recent Telemetry Telemetry Log Archive
+            </h5>
+
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-hover align-middle small mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th>Log ID</th>
+                            <th>Timestamp (IST)</th>
+                            <th>Zone</th>
+                            <th>Temp (°C)</th>
+                            <th>Humidity (%)</th>
+                            <th>VPD (kPa)</th>
+                            <th>Soil Moisture (%)</th>
+                            <th>Solar (W/m²)</th>
+                            <th>Wind (km/h)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.HistoricalRecords)
+                        {
+                            <tr>
+                                <td class="font-monospace">#@item.LogId</td>
+                                <td class="fw-medium text-dark">@item.TimestampIST.ToString("dd MMM yyyy, HH:mm:ss")</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">Zone #@item.ZoneId</span>
+                                </td>
+                                <td class="fw-bold @(item.Temperature > 30 ? "text-danger" : "text-dark")">@item.Temperature°C</td>
+                                <td class="fw-semibold text-info">@item.Humidity%</td>
+                                <td class="fw-bold text-success">@item.VPD kPa</td>
+                                <td class="fw-semibold text-warning">@item.SoilMoisture%</td>
+                                <td class="text-muted">@item.SolarRadiation W/m²</td>
+                                <td class="text-muted">@item.WindSpeed km/h</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const ctx = document.getElementById('historicalTrendsChart').getContext('2d');
+
+            const timestamps = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartTimestamps));
+            const temps = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartTemperatures));
+            const humidities = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartHumidities));
+            const vpds = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartVPDs));
+            const soil = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartSoilMoistures));
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [
+                        {
+                            label: 'Temperature (°C)',
+                            data: temps,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                            yAxisID: 'yTemp',
+                            tension: 0.3,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Relative Humidity (%)',
+                            data: humidities,
+                            borderColor: '#06b6d4',
+                            yAxisID: 'yPercent',
+                            tension: 0.3,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Soil Moisture (%)',
+                            data: soil,
+                            borderColor: '#f59e0b',
+                            yAxisID: 'yPercent',
+                            borderDash: [4, 4],
+                            tension: 0.3,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'VPD (kPa)',
+                            data: vpds,
+                            borderColor: '#10b981',
+                            yAxisID: 'yVpd',
+                            tension: 0.3,
+                            borderWidth: 2.5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        yTemp: {
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: 'Temperature (°C)' }
+                        },
+                        yPercent: {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: 'Humidity & Soil (%)' },
+                            min: 0,
+                            max: 100,
+                            grid: { drawOnChartArea: false }
+                        },
+                        yVpd: {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: 'VPD (kPa)' },
+                            min: 0,
+                            max: 2.5,
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

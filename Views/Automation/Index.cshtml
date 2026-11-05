@@ -1,0 +1,233 @@
+@model AgriSyncIndia.ViewModels.AutomationViewModel
+@{
+    ViewData["Title"] = "Automation Rules & Soil Telemetry";
+}
+
+<!-- SECTION 1: SOIL TELEMETRY METRICS -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-agri p-4 border-0">
+            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+                <div>
+                    <h4 class="fw-bold mb-1 text-dark">
+                        <i class="bi bi-moisture text-success me-2"></i>Root-Zone Soil Health & Moisture Telemetry
+                    </h4>
+                    <p class="text-muted small mb-0">
+                        Capacitance soil moisture probes at 15cm and 30cm depth in the Precision Drip Sector.
+                    </p>
+                </div>
+                <div>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+                        <i class="bi bi-geo-alt me-1"></i>@Model.SoilMetrics.SoilTextureType
+                    </span>
+                </div>
+            </div>
+
+            <!-- Soil Metrics Cards -->
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <div class="text-muted small">Volumetric Water Content</div>
+                        <div class="display-6 fw-bold text-primary">@Model.SoilMetrics.VolumetricWaterContent<small class="fs-5 text-muted">%</small></div>
+                        <div class="text-muted small mt-1">Status: <strong class="text-success">@Model.SoilMetrics.IrrigationStatus</strong></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <div class="text-muted small">Root-Zone Temperature</div>
+                        <div class="display-6 fw-bold text-dark">@Model.SoilMetrics.RootZoneTemperature<small class="fs-5 text-muted">°C</small></div>
+                        <div class="text-muted small mt-1">Optimal: 20°C - 24°C</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <div class="text-muted small">Field Capacity (FC)</div>
+                        <div class="display-6 fw-bold text-success">@Model.SoilMetrics.FieldCapacity<small class="fs-5 text-muted">%</small></div>
+                        <div class="text-muted small mt-1">Upper Moisture Limit</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <div class="text-muted small">Permanent Wilting Point</div>
+                        <div class="display-6 fw-bold text-danger">@Model.SoilMetrics.PermanentWiltingPoint<small class="fs-5 text-muted">%</small></div>
+                        <div class="text-muted small mt-1">Critical Stress Limit</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Soil Water Retention Profile Visual Bar -->
+            <div class="p-3 bg-white rounded border">
+                <div class="d-flex justify-content-between align-items-center mb-1 small fw-semibold">
+                    <span class="text-danger"><i class="bi bi-x-circle me-1"></i>Wilting Point (22%)</span>
+                    <span class="text-success"><i class="bi bi-check-circle me-1"></i>Current VWC (@Model.SoilMetrics.VolumetricWaterContent%)</span>
+                    <span class="text-primary"><i class="bi bi-droplet-fill me-1"></i>Field Capacity (68%)</span>
+                </div>
+                <div class="progress" style="height: 14px;">
+                    <div class="progress-bar bg-danger" style="width: 22%" title="Permanent Wilting Point"></div>
+                    <div class="progress-bar bg-success" style="width: 32%" title="Plant Available Water"></div>
+                    <div class="progress-bar bg-primary" style="width: 14%" title="Field Capacity Cushion"></div>
+                    <div class="progress-bar bg-light" style="width: 32%" title="Air Pores"></div>
+                </div>
+                <div class="d-flex justify-content-between text-muted" style="font-size: 0.72rem; margin-top: 4px;">
+                    <span>Soil Salinity (EC): @Model.SoilMetrics.SalinityEC dS/m (Good)</span>
+                    <span>Plant Available Water (PAW): @Model.SoilMetrics.PlantAvailableWater%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 2: ADD IF-THEN AUTOMATION RULE FORM (ASP.NET Core Form Validation) -->
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-5">
+        <div class="card card-agri p-4 border-0 h-100">
+            <h5 class="fw-bold mb-2 text-dark">
+                <i class="bi bi-plus-circle-fill text-success me-2"></i>Configure New IF-THEN Rule
+            </h5>
+            <p class="text-muted small mb-3">
+                Autonomous microclimate logic evaluated whenever telemetry updates from Open-Meteo or IoT nodes.
+            </p>
+
+            <form asp-action="CreateRule" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="NewRule.ConditionVariable" class="form-label small fw-semibold text-muted"></label>
+                    <select asp-for="NewRule.ConditionVariable" class="form-select">
+                        <option value="Relative Humidity">Relative Humidity (%)</option>
+                        <option value="Temperature">Temperature (°C)</option>
+                        <option value="VPD">Vapor Pressure Deficit (kPa)</option>
+                        <option value="Soil Moisture">Soil Moisture (%)</option>
+                    </select>
+                    <span asp-validation-for="NewRule.ConditionVariable" class="text-danger small"></span>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-5">
+                        <label asp-for="NewRule.Operator" class="form-label small fw-semibold text-muted"></label>
+                        <select asp-for="NewRule.Operator" class="form-select">
+                            <option value=">">Greater than (&gt;)</option>
+                            <option value="<">Less than (&lt;)</option>
+                            <option value=">=">Greater or Equal (&gt;=)</option>
+                            <option value="<=">Less or Equal (&lt;=)</option>
+                        </select>
+                        <span asp-validation-for="NewRule.Operator" class="text-danger small"></span>
+                    </div>
+                    <div class="col-7">
+                        <label asp-for="NewRule.ThresholdValue" class="form-label small fw-semibold text-muted"></label>
+                        <input asp-for="NewRule.ThresholdValue" class="form-control" type="number" step="0.1" />
+                        <span asp-validation-for="NewRule.ThresholdValue" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="NewRule.ActionTarget" class="form-label small fw-semibold text-muted"></label>
+                    <select asp-for="NewRule.ActionTarget" class="form-select">
+                        <option value="Turn ON Exhaust Fans">Turn ON Exhaust Fans</option>
+                        <option value="Turn OFF Exhaust Fans">Turn OFF Exhaust Fans</option>
+                        <option value="Turn ON Misting Pump">Turn ON Misting Pump</option>
+                        <option value="Turn OFF Misting Pump">Turn OFF Misting Pump</option>
+                        <option value="Turn ON Drip Solenoid Valves">Turn ON Drip Solenoid Valves</option>
+                        <option value="Turn OFF Drip Solenoid Valves">Turn OFF Drip Solenoid Valves</option>
+                    </select>
+                    <span asp-validation-for="NewRule.ActionTarget" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="NewRule.Description" class="form-label small fw-semibold text-muted">Agronomic Objective / Description</label>
+                    <input asp-for="NewRule.Description" class="form-control" placeholder="e.g. Prevent rice blast spores during monsoon surge" />
+                    <span asp-validation-for="NewRule.Description" class="text-danger small"></span>
+                </div>
+
+                <div class="form-check form-switch mb-3">
+                    <input asp-for="NewRule.IsActive" class="form-check-input" type="checkbox" id="ruleActiveSwitch" checked />
+                    <label class="form-check-label small fw-semibold text-dark" for="ruleActiveSwitch">Enable rule immediately</label>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100 fw-semibold shadow-sm">
+                    <i class="bi bi-save me-1"></i> Register Automation Rule
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SECTION 3: EXISTING RULES TABLE -->
+    <div class="col-12 col-lg-7">
+        <div class="card card-agri p-4 border-0 h-100 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-cpu-fill text-primary me-2"></i>Active Automation Rules (@Model.ExistingRules.Count)
+                </h5>
+                <span class="badge bg-primary bg-opacity-10 text-primary">Autonomous Loop</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small text-muted text-uppercase">
+                        <tr>
+                            <th>Condition (IF)</th>
+                            <th>Target Action (THEN)</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rule in Model.ExistingRules)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">
+                                        IF <span class="text-primary">@rule.ConditionVariable</span> 
+                                        <span class="badge bg-light text-dark border">@rule.Operator</span> 
+                                        <span class="text-danger">@rule.ThresholdValue</span>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(rule.Description))
+                                    {
+                                        <div class="text-muted" style="font-size: 0.75rem;">@rule.Description</div>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge @(rule.ActionTarget.Contains("Turn ON") ? "bg-success bg-opacity-10 text-success border border-success border-opacity-25" : "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25") px-2 py-1">
+                                        <i class="bi bi-arrow-right me-1"></i>@rule.ActionTarget
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (rule.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Disabled</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1">
+                                        <!-- Toggle Status Form -->
+                                        <form asp-action="ToggleRule" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="ruleId" value="@rule.RuleId" />
+                                            <button type="submit" class="btn btn-sm @(rule.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="Toggle Active State">
+                                                <i class="bi @(rule.IsActive ? "bi-pause-fill" : "bi-play-fill")"></i>
+                                            </button>
+                                        </form>
+
+                                        <!-- Delete Rule Form -->
+                                        <form asp-action="DeleteRule" method="post" class="m-0" onsubmit="return confirm('Remove rule #@rule.RuleId?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="ruleId" value="@rule.RuleId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Rule">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

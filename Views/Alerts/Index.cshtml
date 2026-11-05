@@ -1,0 +1,167 @@
+@model AgriSyncIndia.ViewModels.AlertsViewModel
+@{
+    ViewData["Title"] = "Climate Alerts & Regional Agromet Advisory";
+}
+
+<!-- Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-agri p-4 border-0">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <h4 class="fw-bold mb-1 text-dark">
+                        <i class="bi bi-shield-exclamation text-danger me-2"></i>Agro-Climatic Alert Center & Advisories
+                    </h4>
+                    <p class="text-muted small mb-0">
+                        Automated threshold alert triggers aligned with ICAR Agromet and IMD District Weather Bulletins.
+                    </p>
+                </div>
+
+                <!-- Severity Filter Pills -->
+                <div class="btn-group" role="group">
+                    <a asp-action="Index" asp-route-severity="All" 
+                       class="btn btn-sm @(Model.SelectedSeverity == "All" ? "btn-dark" : "btn-outline-secondary")">
+                        All Alerts (@Model.Alerts.Count)
+                    </a>
+                    <a asp-action="Index" asp-route-severity="Critical" 
+                       class="btn btn-sm @(Model.SelectedSeverity == "Critical" ? "btn-danger" : "btn-outline-danger")">
+                        <i class="bi bi-exclamation-octagon-fill me-1"></i> Critical (@Model.CriticalCount)
+                    </a>
+                    <a asp-action="Index" asp-route-severity="Warning" 
+                       class="btn btn-sm @(Model.SelectedSeverity == "Warning" ? "btn-warning text-dark" : "btn-outline-warning")">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Warning (@Model.WarningCount)
+                    </a>
+                    <a asp-action="Index" asp-route-severity="Info" 
+                       class="btn btn-sm @(Model.SelectedSeverity == "Info" ? "btn-info text-dark" : "btn-outline-info")">
+                        <i class="bi bi-info-circle-fill me-1"></i> Info
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 1: ACTIVE CLIMATE ALERTS TABLE -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-agri p-4 border-0 shadow-sm">
+            <h5 class="fw-bold mb-3 text-dark">
+                <i class="bi bi-bell-fill text-danger me-2"></i>Triggered Climate Alerts (@Model.SelectedSeverity)
+            </h5>
+
+            @if (!Model.Alerts.Any())
+            {
+                <div class="alert alert-success d-flex align-items-center mb-0" role="alert">
+                    <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+                    <div>
+                        <strong>No Active Alerts:</strong> All farm microclimates are operating within standard agronomic safety thresholds.
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-muted text-uppercase">
+                            <tr>
+                                <th>Severity</th>
+                                <th>Alert Title</th>
+                                <th>Zone</th>
+                                <th>Timestamp (IST)</th>
+                                <th>Observation Details</th>
+                                <th>Agronomist Recommendation</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var alert in Model.Alerts)
+                            {
+                                <tr class="@(alert.IsAcknowledged ? "opacity-75 bg-light" : "")">
+                                    <td>
+                                        <span class="badge @(alert.Severity == "Critical" ? "bg-danger" : (alert.Severity == "Warning" ? "bg-warning text-dark" : "bg-info text-dark")) px-2 py-1">
+                                            @alert.Severity
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@alert.Title</div>
+                                        @if (alert.IsAcknowledged)
+                                        {
+                                            <span class="badge bg-secondary text-white" style="font-size: 0.68rem;"><i class="bi bi-check2 me-1"></i>Acknowledged</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger text-white" style="font-size: 0.68rem;"><i class="bi bi-broadcast me-1"></i>Live Unresolved</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="fw-semibold text-dark">@(alert.Zone?.Name ?? "All Zones")</span>
+                                    </td>
+                                    <td class="small text-muted">@alert.TimestampIST.ToString("dd MMM, HH:mm") IST</td>
+                                    <td class="small text-dark" style="max-width: 280px;">@alert.Message</td>
+                                    <td class="small text-success fw-medium" style="max-width: 300px;">
+                                        <i class="bi bi-check2-circle me-1"></i>@alert.AgronomistRecommendation
+                                    </td>
+                                    <td class="text-end">
+                                        @if (!alert.IsAcknowledged)
+                                        {
+                                            <form asp-action="Acknowledge" method="post" class="m-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="alertId" value="@alert.AlertId" />
+                                                <input type="hidden" name="severity" value="@Model.SelectedSeverity" />
+                                                <button type="submit" class="btn btn-sm btn-outline-success">
+                                                    <i class="bi bi-check-lg me-1"></i> Acknowledge
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small"><i class="bi bi-check2-all text-success"></i> Resolved</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 2: REGIONAL CROP ADVISORIES (ICAR / IMD Agromet Bulletins) -->
+<div class="row">
+    <div class="col-12">
+        <h5 class="fw-bold mb-3 text-dark">
+            <i class="bi bi-journal-text text-success me-2"></i>ICAR / IMD Regional Agromet Bulletins & Crop Advisories
+        </h5>
+    </div>
+
+    @foreach (var advisory in Model.Advisories)
+    {
+        <div class="col-12 col-lg-4 mb-3">
+            <div class="card card-agri h-100 p-4 border-0 border-top border-4 border-success">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                        <i class="bi bi-geo-alt-fill me-1"></i>@advisory.StateRegion
+                    </span>
+                    <span class="text-muted" style="font-size: 0.72rem;">@advisory.IssuedDateIST.ToString("dd MMM yyyy")</span>
+                </div>
+
+                <h6 class="fw-bold text-dark mt-2 mb-1">@advisory.CropName</h6>
+                <div class="text-muted small mb-2"><i class="bi bi-calendar-event me-1"></i>Stage: @advisory.GrowthStage</div>
+
+                <div class="alert alert-light border small text-dark p-2 mb-3">
+                    <strong><i class="bi bi-exclamation-circle text-primary me-1"></i>@advisory.AdvisoryHeadline</strong>
+                </div>
+
+                <p class="small text-muted flex-grow-1 mb-3">
+                    @advisory.DetailedInstructions
+                </p>
+
+                <div class="border-top pt-2 text-muted" style="font-size: 0.72rem;">
+                    <i class="bi bi-building me-1"></i>@advisory.SourceInstitute
+                </div>
+            </div>
+        </div>
+    }
+</div>

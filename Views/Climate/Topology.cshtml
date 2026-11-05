@@ -1,0 +1,181 @@
+@model AgriSyncIndia.ViewModels.TopologyViewModel
+@{
+    ViewData["Title"] = "Microclimate Topology & IoT Health";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-agri p-4 border-0">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <h4 class="fw-bold mb-1 text-dark">
+                        <i class="bi bi-diagram-3-fill text-success me-2"></i>Microclimate Spatial Topology Matrix
+                    </h4>
+                    <p class="text-muted small mb-0">
+                        @Model.FarmLayoutDescription
+                    </p>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="text-end">
+                        <div class="text-muted small">Farm Avg Temp</div>
+                        <div class="fw-bold fs-5 text-dark">@Model.FarmAvgTemp°C</div>
+                    </div>
+                    <div class="text-end border-start ps-3">
+                        <div class="text-muted small">Max Thermal Delta</div>
+                        <div class="fw-bold fs-5 text-danger">Δ @Model.MaxThermalDelta°C</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 1: SECTOR MATRIX (THERMAL VARIATIONS ACROSS FARM ZONES) -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-grid text-primary me-2"></i>Thermal Variation Matrix</h5>
+    </div>
+    @foreach (var sector in Model.SectorMatrix)
+    {
+        <div class="col-12 col-md-4">
+            <div class="card card-agri h-100 p-3 border-0 border-top border-4 @sector.ColorBadge">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="badge bg-light text-dark border fw-bold">@sector.SectorCode</span>
+                        <h6 class="fw-bold mt-2 mb-0 text-dark">@sector.ZoneName</h6>
+                        <span class="text-muted small">@sector.MicroclimateType</span>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge @(sector.AmbientDelta > 0 ? "bg-danger" : (sector.AmbientDelta < 0 ? "bg-primary" : "bg-success")) px-2 py-1">
+                            @(sector.AmbientDelta > 0 ? $"+{sector.AmbientDelta}°C" : $"{sector.AmbientDelta}°C") vs Ambient
+                        </span>
+                    </div>
+                </div>
+
+                <div class="my-3 p-3 bg-light rounded text-center">
+                    <div class="display-6 fw-bold text-dark">@sector.CurrentTemp<small class="fs-5 text-muted">°C</small></div>
+                    <div class="text-muted small">Thermal Regime: <strong class="text-dark">@sector.ThermalCategory</strong></div>
+                </div>
+
+                <div class="row g-1 text-center small text-muted border-top pt-2">
+                    <div class="col-4 border-end">
+                        <div>RH</div>
+                        <strong class="text-dark">@sector.Humidity%</strong>
+                    </div>
+                    <div class="col-4 border-end">
+                        <div>VPD</div>
+                        <strong class="text-dark">@sector.VPD kPa</strong>
+                    </div>
+                    <div class="col-4">
+                        <div>Soil</div>
+                        <strong class="text-dark">@sector.SoilMoisture%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Visual Heat Gradient Bar -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-agri p-3 border-0">
+            <div class="d-flex justify-content-between align-items-center mb-2 small fw-semibold text-muted">
+                <span><i class="bi bi-droplet-half text-primary me-1"></i>Evaporative Cooling: Drip Sector (23.0°C)</span>
+                <span><i class="bi bi-sun text-warning me-1"></i>Ambient Baseline: Open Field (24.2°C)</span>
+                <span><i class="bi bi-fire text-danger me-1"></i>Solar Trapping: Polyhouse Nursery (26.8°C)</span>
+            </div>
+            <div class="progress" style="height: 12px; border-radius: 6px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: 33%" title="Cooled microclimate"></div>
+                <div class="progress-bar bg-warning" role="progressbar" style="width: 34%" title="Baseline ambient"></div>
+                <div class="progress-bar bg-danger" role="progressbar" style="width: 33%" title="Thermal elevation"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 2: IOT SENSOR NODE HEALTH & BATTERY LEVELS TABLE -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-agri p-4 border-0 shadow-sm">
+            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark">
+                        <i class="bi bi-hdd-network-fill text-success me-2"></i>IoT Sensor Node Health & Battery Telemetry
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        Live diagnostic telemetry from wireless sensor nodes deployed across farm microclimate sectors.
+                    </p>
+                </div>
+                <div>
+                    <span class="badge bg-success px-3 py-2"><i class="bi bi-wifi me-1"></i> LoRaWAN Gateway Online</span>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr class="text-uppercase small text-muted">
+                            <th>Node ID</th>
+                            <th>Deployment Zone</th>
+                            <th>Sensor Payload</th>
+                            <th>Battery Level</th>
+                            <th>Signal (RSSI)</th>
+                            <th>Interval</th>
+                            <th>Last Heartbeat</th>
+                            <th>Calibration</th>
+                            <th>Health Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var node in Model.SensorNodes)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="font-monospace fw-bold text-dark">@node.NodeId</span>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-dark">@node.ZoneName</span>
+                                </td>
+                                <td>
+                                    <span class="small text-muted"><i class="bi bi-cpu me-1"></i>@node.SensorType</span>
+                                </td>
+                                <td style="min-width: 130px;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                            <div class="progress-bar @(node.BatteryPercent > 75 ? "bg-success" : (node.BatteryPercent > 50 ? "bg-warning" : "bg-danger"))" 
+                                                 role="progressbar" style="width: @node.BatteryPercent%"></div>
+                                        </div>
+                                        <span class="small fw-bold">@node.BatteryPercent%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="bi bi-reception-4 text-success me-1"></i>@node.SignalRssi dBm
+                                    </span>
+                                </td>
+                                <td class="small text-muted">@node.TransmissionInterval</td>
+                                <td class="small text-muted">@node.LastHeartbeatIST.ToString("HH:mm:ss") IST</td>
+                                <td class="small text-muted">@node.LastCalibrationDate.ToString("dd MMM yyyy")</td>
+                                <td>
+                                    @if (node.HealthStatus == "Healthy")
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
+                                            <i class="bi bi-check-circle-fill me-1"></i>Healthy
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>Attention
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
