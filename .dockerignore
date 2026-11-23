@@ -1,0 +1,13 @@
+.git/
+.gitignore
+bin/
+obj/
+*.log
+*.db
+*.db-shm
+*.db-wal
+App_Data/DataProtection-Keys/
+.vs/
+.idea/
+README.md
+render.yaml

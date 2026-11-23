@@ -1,0 +1,19 @@
+# Build artifacts
+bin/
+obj/
+
+# Logs
+*.log
+
+# Local database (recreated & seeded at startup)
+*.db
+*.db-shm
+*.db-wal
+
+# Data protection keys (machine-specific)
+App_Data/DataProtection-Keys/
+
+# IDE
+.vs/
+.idea/
+*.user
