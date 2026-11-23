@@ -1,4 +1,8 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
-
-// Write your JavaScript code.
+// Every page: toast auto-dismiss, account menu closes on outside click or Escape.
+(function () {
+  document.querySelectorAll("[data-toast]").forEach(function (t) { setTimeout(function () { t.hidden = true; }, 5000); });
+  var um = document.querySelector("details.um");
+  if (!um) return;
+  document.addEventListener("click", function (e) { if (!um.contains(e.target)) um.open = false; });
+  um.addEventListener("keydown", function (e) { if (e.key === "Escape") { um.open = false; um.querySelector("summary").focus(); } });
+})();

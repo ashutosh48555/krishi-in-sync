@@ -58,6 +58,7 @@ builder.Services.AddHttpClient("OpenMeteoClient", client =>
 
 // Register OpenMeteoService via Dependency Injection
 builder.Services.AddScoped<IOpenMeteoService, OpenMeteoService>();
+builder.Services.AddScoped<DashboardViewModelBuilder>();
 
 // Postgres when a connection string is set, otherwise a local SQLite file.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -106,7 +107,7 @@ using (var scope = app.Services.CreateScope())
 app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Climate/Dashboard");
+    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
@@ -125,6 +126,7 @@ app.Use(async (ctx, next) =>
 });
 
 app.UseStaticFiles();
+app.UseMiddleware<LanguageMiddleware>();
 
 app.UseRouting();
 app.UseRateLimiter();
@@ -150,6 +152,6 @@ app.MapGet("/healthz", async (AgriSyncDbContext db) =>
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Climate}/{action=Dashboard}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

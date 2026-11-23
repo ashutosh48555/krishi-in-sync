@@ -1,9 +1,11 @@
 @* Lucide-style inline icon (ISC, see wwwroot/lib/NOTICE.txt). Model = icon name. Optional ViewData["size"] (int, default 18), ViewData["class"]. Paths are constants, never user input. *@
 @model string
 @{
-    var size = ViewData["size"] is int s ? s : 18;
+    var parts = (Model ?? "").Split(':');   // "name" or "name:size"
+    var name = parts[0];
+    var size = parts.Length > 1 && int.TryParse(parts[1], out var ps) ? ps : (ViewData["size"] is int s ? s : 18);
     var cls = ViewData["class"] is string css ? " class=\"" + css + "\"" : "";
-    string paths = Model switch
+    string paths = name switch
     {
         "sun" => "<circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2m-7.07-14.07 1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41\"/>",
         "moon" => "<path d=\"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z\"/>",

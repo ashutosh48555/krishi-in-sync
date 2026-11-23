@@ -1,283 +1,45 @@
+@{
+    var lang = Context.Lang();
+    var title = ViewData["Title"] as string;
+}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@lang">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - AgriSync India (कृषि सिंक)</title>
-
-    <!-- Bootstrap 5 CSS -->
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <!-- Google Fonts: Inter & Outfit -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Custom Modern AgriSync Styling -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <title>@(string.IsNullOrEmpty(title) ? "Krishi Sync" : title + " · Krishi Sync")</title>
+    <script src="~/js/theme-init.js"></script>
+    <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-    <style>
-        :root {
-            --agri-green-dark: #1b4332;
-            --agri-green-primary: #2d6a4f;
-            --agri-green-accent: #52b788;
-            --agri-green-light: #d8f3dc;
-            --agri-gold: #e9c46a;
-            --agri-saffron: #f77f00;
-        }
-
-        body {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f4f7f6;
-            color: #1f2937;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        h1, h2, h3, h4, h5, .brand-font {
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .navbar-agri {
-            background: linear-gradient(135deg, #133926 0%, #1e5239 100%);
-            border-bottom: 3px solid var(--agri-green-accent);
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
-        }
-
-        .navbar-brand {
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: #ffffff !important;
-            letter-spacing: -0.02em;
-        }
-
-        .brand-subtext {
-            font-size: 0.72rem;
-            color: #a7f3d0;
-            display: block;
-            margin-top: -3px;
-            font-weight: 500;
-        }
-
-        .nav-link {
-            color: #d1fae5 !important;
-            font-weight: 500;
-            font-size: 0.93rem;
-            padding: 0.55rem 0.85rem !important;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            color: #ffffff !important;
-            background-color: rgba(255, 255, 255, 0.14);
-        }
-
-        .badge-ist {
-            background: rgba(255, 255, 255, 0.16);
-            color: #e2e8f0;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            font-size: 0.8rem;
-            padding: 0.35rem 0.65rem;
-            border-radius: 20px;
-        }
-
-        .card-agri {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .card-agri:hover {
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
-        }
-
-        .tricolor-stripe {
-            height: 3px;
-            background: linear-gradient(90deg, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%);
-        }
-
-        .footer-agri {
-            background: #111827;
-            color: #9ca3af;
-            font-size: 0.86rem;
-            margin-top: auto;
-        }
-
-        .badge-vpd-optimal {
-            background-color: #10b981;
-            color: #ffffff;
-            font-weight: 600;
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/hero3d.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/theme-switch.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/pages.css" asp-append-version="true" />
+    @await RenderSectionAsync("Head", required: false)
 </head>
 <body>
-    <div class="tricolor-stripe"></div>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark navbar-agri py-2">
-            <div class="container-fluid px-lg-4">
-                <a class="navbar-brand d-flex align-items-center" asp-controller="Climate" asp-action="Dashboard">
-                    <span class="p-2 bg-success bg-opacity-25 rounded-circle me-2 border border-success border-opacity-50 text-white">
-                        <i class="bi bi-cpu fs-5"></i>
-                    </span>
-                    <div>
-                        <span>AgriSync India</span>
-                        <span class="brand-subtext">Automated Climate Monitoring • कृषि सिंक</span>
-                    </div>
-                </a>
-
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#agriNavbar" aria-controls="agriNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="collapse navbar-collapse" id="agriNavbar">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Climate" asp-action="Dashboard">
-                                <i class="bi bi-speedometer2 me-1"></i> Executive Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Climate" asp-action="Topology">
-                                <i class="bi bi-diagram-3 me-1"></i> Microclimate Topology
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Climate" asp-action="Analytics">
-                                <i class="bi bi-graph-up-arrow me-1"></i> Historical Analytics
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Automation" asp-action="Index">
-                                <i class="bi bi-gear-wide-connected me-1"></i> Automation & Soil
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="FarmCluster" asp-action="Index">
-                                <i class="bi bi-geo-alt me-1"></i> Farm Clusters
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link position-relative" asp-controller="Alerts" asp-action="Index">
-                                <i class="bi bi-bell me-1"></i> Alerts & Advisory
-                            </a>
-                        </li>
-                    </ul>
-
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="badge-ist d-none d-md-flex align-items-center">
-                            <span class="spinner-grow spinner-grow-sm text-success me-2" role="status" style="width: 8px; height: 8px;"></span>
-                            <span id="liveClockDisplay">IST Live</span>
-                        </div>
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-light dropdown-toggle px-3 py-1 d-flex align-items-center" type="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-person-circle me-1"></i>
-                                    <span>@User.Identity.Name</span>
-                                    <span class="badge bg-success ms-2" style="font-size: 0.68rem;">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow">
-                                    <li><h6 class="dropdown-header">Active Personnel Session</h6></li>
-                                    <li><span class="dropdown-item-text text-muted small"><i class="bi bi-envelope me-1"></i>@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value</span></li>
-                                    <li><span class="dropdown-item-text text-muted small"><i class="bi bi-geo-alt me-1"></i>@(User.FindFirst("AffiliatedCluster")?.Value ?? "All Farm Clusters")</span></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" asp-controller="FarmCluster" asp-action="Index"><i class="bi bi-grid me-2"></i>Manage Farm Clusters</a></li>
-                                    <li><a class="dropdown-item" asp-controller="FarmCluster" asp-action="Create"><i class="bi bi-plus-circle me-2"></i>Add New Farm Cluster</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="dropdown-item text-danger">
-                                                <i class="bi bi-box-arrow-right me-2"></i>Sign Out
-                                            </button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="d-flex align-items-center gap-2">
-                                <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-outline-light px-3 py-1">
-                                    <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
-                                </a>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
-        </nav>
-    </header>
-
-    <div class="container-fluid px-lg-4 py-3">
-        <!-- System Alerts / Notifications -->
-        @if (TempData["SuccessMessage"] != null)
+    <a class="skip" href="#main">@Context.T("skip")</a>
+    <div class="wrap">
+        <partial name="_Nav" />
+        @if (TempData["SuccessMessage"] is string ok)
         {
-            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                <strong>Success:</strong> @TempData["SuccessMessage"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+            <div class="toast" role="status" data-toast>@await Html.Icon("check", 16)<span>@ok</span></div>
         }
-        @if (TempData["ErrorMessage"] != null)
+        @if (TempData["ErrorMessage"] is string bad)
         {
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <strong>Notice:</strong> @TempData["ErrorMessage"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+            <div class="toast bad" role="alert" data-toast>@await Html.Icon("triangle-alert", 16)<span>@bad</span></div>
         }
-
-        <main role="main">
+        <main id="main">
             @RenderBody()
         </main>
+        <footer>
+            <span>@Context.T("foot.text")</span>
+            <a asp-controller="Home" asp-action="Privacy">@Context.T("foot.privacy")</a>
+        </footer>
     </div>
-
-    <footer class="footer-agri py-3 border-top border-secondary border-opacity-25">
-        <div class="container-fluid px-lg-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-            <div>
-                <span class="fw-bold text-light">AgriSync India</span> — Automated Microclimate Monitoring & Actuator Telemetry.
-                <span class="text-secondary ms-2">Aligned with ICAR-IARI Agromet Advisory & Open-Meteo REST API.</span>
-            </div>
-            <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-dark border border-secondary text-secondary">ASP.NET Core MVC 10</span>
-                <span class="badge bg-dark border border-secondary text-secondary">EF Core Code-First</span>
-                <span class="badge bg-dark border border-secondary text-secondary">Chart.js</span>
-                <span class="badge bg-dark border border-secondary text-secondary">Asia/Kolkata (IST)</span>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Bootstrap 5 JS & jQuery -->
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
-
-    <script>
-        // Real-time IST Clock updates every second
-        function updateISTClock() {
-            const clockEl = document.getElementById("liveClockDisplay");
-            if (!clockEl) return;
-            const now = new Date();
-            // Calculate IST (UTC + 5.5 hours)
-            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-            const istTime = new Date(utcTime + (3600000 * 5.5));
-            const options = { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
-            clockEl.textContent = "IST " + istTime.toLocaleTimeString('en-GB', options);
-        }
-        setInterval(updateISTClock, 1000);
-        updateISTClock();
-    </script>
-
+    <script src="~/js/theme.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

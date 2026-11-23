@@ -1,0 +1,52 @@
+@using System.Security.Claims
+@{
+    var controller = (string?)ViewContext.RouteData.Values["controller"] ?? "";
+    var action = (string?)ViewContext.RouteData.Values["action"] ?? "";
+    var lang = Context.Lang();
+    bool On(string c, string? a = null) => c == controller && (a == null || a == action);
+    var dashboardOn = On("Home", "Index") || On("Climate", "Dashboard");
+    var historyOn = On("Climate", "Analytics");
+    var zonesOn = On("Climate", "Topology");
+    var user = User.Identity?.IsAuthenticated == true ? User : null;
+    var name = user?.Identity?.Name ?? "";
+    var initial = name.Length > 0 ? name.TrimStart().Substring(0, 1).ToUpperInvariant() : "?";
+    var langs = new[] { ("en", "EN"), ("hi", "हिं"), ("pa", "ਪੰ") };
+}
+<nav aria-label="@Context.T("nav.main")">
+    <a class="brand" asp-controller="Home" asp-action="Index"><span class="lg">@await Html.Icon("sprout", 17)</span><span class="bn">Krishi Sync</span></a>
+    <div class="links">
+        <a asp-controller="Climate" asp-action="Dashboard" class="@(dashboardOn ? "on" : null)" aria-current="@(dashboardOn ? "page" : null)">@Context.T("nav.dashboard")</a>
+        <a asp-controller="Climate" asp-action="Topology" class="@(zonesOn ? "on" : null)" aria-current="@(zonesOn ? "page" : null)">@Context.T("nav.zones")</a>
+        <a asp-controller="Climate" asp-action="Analytics" class="@(historyOn ? "on" : null)" aria-current="@(historyOn ? "page" : null)">@Context.T("nav.history")</a>
+        <a asp-controller="Automation" asp-action="Index" class="@(On("Automation") ? "on" : null)" aria-current="@(On("Automation") ? "page" : null)">@Context.T("nav.automation")</a>
+        <a asp-controller="FarmCluster" asp-action="Index" class="@(On("FarmCluster") ? "on" : null)" aria-current="@(On("FarmCluster") ? "page" : null)">@Context.T("nav.clusters")</a>
+        <a asp-controller="Alerts" asp-action="Index" class="@(On("Alerts") ? "on" : null)" aria-current="@(On("Alerts") ? "page" : null)">@Context.T("nav.alerts")</a>
+    </div>
+    <div class="seg" role="group" aria-label="@Context.T("nav.lang")">
+        @foreach (var (code, label) in langs)
+        {
+            <a href="@Context.LangUrl(code)" lang="@code" hreflang="@code" aria-current="@(lang == code ? "true" : null)">@label</a>
+        }
+    </div>
+    <button type="button" class="ib" id="theme" aria-label="@Context.T("nav.theme")">
+        <span class="su">@await Html.Icon("sun", 18)</span><span class="mo">@await Html.Icon("moon", 18)</span>
+    </button>
+    @if (user == null)
+    {
+        <a class="btn sm signin" asp-controller="Account" asp-action="Login" aria-label="@Context.T("nav.signin")">@await Html.Icon("user", 16)<span class="lbl">@Context.T("nav.signin")</span></a>
+    }
+    else
+    {
+        <details class="um">
+            <summary class="ib" aria-label="@Context.T("nav.account")"><span class="av">@initial</span></summary>
+            <div class="menu">
+                <p class="who"><b>@name</b><span>@user.FindFirst(ClaimTypes.Role)?.Value</span></p>
+                <a asp-controller="FarmCluster" asp-action="Index">@await Html.Icon("map-pin", 16)@Context.T("nav.manage")</a>
+                <a asp-controller="FarmCluster" asp-action="Create">@await Html.Icon("plus", 16)@Context.T("nav.addcluster")</a>
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    <button type="submit">@await Html.Icon("log-out", 16)@Context.T("nav.signout")</button>
+                </form>
+            </div>
+        </details>
+    }
+</nav>
