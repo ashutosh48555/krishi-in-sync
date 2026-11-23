@@ -1,236 +1,242 @@
 @model AgriSyncIndia.ViewModels.AutomationViewModel
 @{
-    ViewData["Title"] = "Automation Rules & Soil Telemetry";
+    var lang = Context.Lang();
+    string T(string k) => Localizer.T(lang, k);
+    ViewData["Title"] = T("au.title");
+    var hasSoilReading = Model.SoilMetrics.VolumetricWaterContent.HasValue;
+    var soilStatus = Model.SoilMetrics.Status;
 }
+@section Head { <link rel="stylesheet" href="~/css/pages-b.css" asp-append-version="true" /> }
 
-<!-- SECTION 1: SOIL TELEMETRY METRICS -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card card-agri p-4 border-0">
-            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
-                <div>
-                    <h4 class="fw-bold mb-1 text-dark">
-                        <i class="bi bi-moisture text-success me-2"></i>Root-Zone Soil Health & Moisture Telemetry
-                    </h4>
-                    <p class="text-muted small mb-0">
-                        Capacitance soil moisture probes at 15cm and 30cm depth in the Precision Drip Sector.
-                    </p>
-                </div>
-                <div>
-                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
-                        <i class="bi bi-geo-alt me-1"></i>@Model.SoilMetrics.SoilTextureType
-                    </span>
-                </div>
-            </div>
-
-            <!-- Soil Metrics Cards -->
-            <div class="row g-3 mb-3">
-                <div class="col-6 col-md-3">
-                    <div class="p-3 bg-light rounded text-center border">
-                        <div class="text-muted small">Volumetric Water Content</div>
-                        <div class="display-6 fw-bold text-primary">@Model.SoilMetrics.VolumetricWaterContent<small class="fs-5 text-muted">%</small></div>
-                        <div class="text-muted small mt-1">Status: <strong class="text-success">@Model.SoilMetrics.IrrigationStatus</strong></div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="p-3 bg-light rounded text-center border">
-                        <div class="text-muted small">Root-Zone Temperature</div>
-                        <div class="display-6 fw-bold text-dark">@Model.SoilMetrics.RootZoneTemperature<small class="fs-5 text-muted">°C</small></div>
-                        <div class="text-muted small mt-1">Optimal: 20°C - 24°C</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="p-3 bg-light rounded text-center border">
-                        <div class="text-muted small">Field Capacity (FC)</div>
-                        <div class="display-6 fw-bold text-success">@Model.SoilMetrics.FieldCapacity<small class="fs-5 text-muted">%</small></div>
-                        <div class="text-muted small mt-1">Upper Moisture Limit</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="p-3 bg-light rounded text-center border">
-                        <div class="text-muted small">Permanent Wilting Point</div>
-                        <div class="display-6 fw-bold text-danger">@Model.SoilMetrics.PermanentWiltingPoint<small class="fs-5 text-muted">%</small></div>
-                        <div class="text-muted small mt-1">Critical Stress Limit</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Soil Water Retention Profile Visual Bar -->
-            <div class="p-3 bg-white rounded border">
-                <div class="d-flex justify-content-between align-items-center mb-1 small fw-semibold">
-                    <span class="text-danger"><i class="bi bi-x-circle me-1"></i>Wilting Point (22%)</span>
-                    <span class="text-success"><i class="bi bi-check-circle me-1"></i>Current VWC (@Model.SoilMetrics.VolumetricWaterContent%)</span>
-                    <span class="text-primary"><i class="bi bi-droplet-fill me-1"></i>Field Capacity (68%)</span>
-                </div>
-                <div class="progress" style="height: 14px;">
-                    <div class="progress-bar bg-danger" style="width: 22%" title="Permanent Wilting Point"></div>
-                    <div class="progress-bar bg-success" style="width: 32%" title="Plant Available Water"></div>
-                    <div class="progress-bar bg-primary" style="width: 14%" title="Field Capacity Cushion"></div>
-                    <div class="progress-bar bg-light" style="width: 32%" title="Air Pores"></div>
-                </div>
-                <div class="d-flex justify-content-between text-muted" style="font-size: 0.72rem; margin-top: 4px;">
-                    <span>Soil Salinity (EC): @Model.SoilMetrics.SalinityEC dS/m (Good)</span>
-                    <span>Plant Available Water (PAW): @Model.SoilMetrics.PlantAvailableWater%</span>
-                </div>
-            </div>
-        </div>
+<div class="dh">
+    <div class="dt">
+        <h1 class="sec-title">@T("au.title")</h1>
+        <p class="sub">@T("au.sub")</p>
     </div>
 </div>
 
-<!-- SECTION 2: ADD IF-THEN AUTOMATION RULE FORM (ASP.NET Core Form Validation) -->
-<div class="row g-4 mb-4">
-    <div class="col-12 col-lg-5">
-        <div class="card card-agri p-4 border-0 h-100">
-            <h5 class="fw-bold mb-2 text-dark">
-                <i class="bi bi-plus-circle-fill text-success me-2"></i>Configure New IF-THEN Rule
-            </h5>
-            <p class="text-muted small mb-3">
-                Autonomous microclimate logic evaluated whenever telemetry updates from Open-Meteo or IoT nodes.
-            </p>
+<div class="bento">
+    <!-- Soil Telemetry Card -->
+    <section class="card c12" aria-labelledby="soil-h">
+        <div class="ch">@await Html.Icon("droplet")<span id="soil-h">@T("au.soil.title")</span><span class="sim">@T("card.modelled")</span></div>
+        <div class="mets">
+            <div class="met">
+                <span class="k">@await Html.Icon("droplet", 14)@T("au.soil.vwc")</span>
+                <span class="v">@(hasSoilReading ? ViewFormat.N(Model.SoilMetrics.VolumetricWaterContent, 1) : "—")<small>%</small></span>
+                @if (soilStatus.HasValue)
+                {
+                    <span class="st @soilStatus.Value.Tone" style="margin-top:6px;">@T("soil." + soilStatus.Value.Key)</span>
+                }
+                else
+                {
+                    <span class="sub" style="margin-top:4px;">@T("dash.noupdate")</span>
+                }
+            </div>
+            <div class="met">
+                <span class="k">@await Html.Icon("thermometer", 14)@T("au.soil.temp")</span>
+                <span class="v">@(Model.SoilMetrics.RootZoneTemperature.HasValue ? ViewFormat.N(Model.SoilMetrics.RootZoneTemperature, 1) : "—")<small>°C</small></span>
+                <span class="sub" style="margin-top:4px;">@(Model.SoilMetrics.RootZoneTemperature.HasValue ? T("zone.drip") : T("dash.noupdate"))</span>
+            </div>
+        </div>
+    </section>
 
-            <form asp-action="CreateRule" method="post">
+    <!-- Rules Table -->
+    <section class="card c7" aria-labelledby="rules-h">
+        <div class="ch">
+            @await Html.Icon("cpu")
+            <span id="rules-h">@T("au.rules")</span>
+            <span class="sp">@Model.ExistingRules.Count</span>
+        </div>
+        <p class="sub" style="margin-bottom:14px;">@T("au.scope")</p>
+
+        @if (Model.ExistingRules.Count == 0)
+        {
+            <p class="empty">@T("au.empty")</p>
+        }
+        else
+        {
+            <div class="rules-list">
+                @foreach (var rule in Model.ExistingRules)
+                {
+                    var access = ControlAccess.ForRule(User, rule);
+                    var ownerKey = ControlAccess.Owner(User, rule);
+                    <article class="rule-item">
+                        <div class="rule-main">
+                            <div class="rule-sentence">
+                                <b>@RuleDisplay.Sentence(lang, rule)</b>
+                            </div>
+                            @if (!string.IsNullOrEmpty(rule.Description))
+                            {
+                                <div class="rule-desc">@rule.Description</div>
+                            }
+                            <div class="rule-meta">
+                                <span class="st @(rule.IsActive ? "" : "mute")">
+                                    @await Html.Icon(rule.IsActive ? "check" : "power", 12)
+                                    @(rule.IsActive ? T("au.active") : T("au.paused"))
+                                </span>
+                                <span class="rule-owner">@T("au.owner." + ownerKey)</span>
+                            </div>
+                        </div>
+                        <div class="rule-actions">
+                            @if (access.Allowed)
+                            {
+                                <form asp-action="ToggleRule" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="ruleId" value="@rule.RuleId" />
+                                    <button type="submit" class="btn sec sm" title="@(rule.IsActive ? T("au.paused") : T("au.active"))">
+                                        @await Html.Icon("power", 14)
+                                    </button>
+                                </form>
+                                <form asp-action="DeleteRule" method="post" class="d-inline" onsubmit="return confirm('@T("au.delete.q")');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="ruleId" value="@rule.RuleId" />
+                                    <button type="submit" class="btn sec sm btn-del" title="@T("au.delete")">
+                                        @await Html.Icon("trash", 14)
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="badge-ro" title="@T(access.ReasonKey ?? "au.ro.why")">@T("au.ro")</span>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <!-- Add Rule Form -->
+    <section class="card c5" aria-labelledby="add-h">
+        <div class="ch">
+            @await Html.Icon("plus")
+            <span id="add-h">@T("au.add")</span>
+        </div>
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <form asp-action="CreateRule" method="post" class="form-grid">
                 @Html.AntiForgeryToken()
-                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="notice" style="border-color:var(--crit); background:color-mix(in srgb, var(--crit) 10%, transparent); margin: 0 0 16px;">
+                        @await Html.Icon("triangle-alert")
+                        <div>
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <div>@FormText.Error(lang, error.ErrorMessage)</div>
+                            }
+                        </div>
+                    </div>
+                }
 
-                <div class="mb-3">
-                    <label asp-for="NewRule.ConditionVariable" class="form-label small fw-semibold text-muted"></label>
-                    <select asp-for="NewRule.ConditionVariable" class="form-select">
-                        <option value="Relative Humidity">Relative Humidity (%)</option>
-                        <option value="Temperature">Temperature (°C)</option>
-                        <option value="VPD">Vapor Pressure Deficit (kPa)</option>
-                        <option value="Soil Moisture">Soil Moisture (%)</option>
+                <div class="fg">
+                    <label class="fl" asp-for="NewRule.ConditionVariable">@T("au.f.metric")</label>
+                    <select asp-for="NewRule.ConditionVariable" class="inp">
+                        <option value="Temperature">@T("rm.temp") (°C)</option>
+                        <option value="Relative Humidity">@T("rm.hum") (%)</option>
+                        <option value="VPD">@T("rm.vpd") (kPa)</option>
                     </select>
-                    <span asp-validation-for="NewRule.ConditionVariable" class="text-danger small"></span>
                 </div>
 
-                <div class="row g-2 mb-3">
-                    <div class="col-5">
-                        <label asp-for="NewRule.Operator" class="form-label small fw-semibold text-muted"></label>
-                        <select asp-for="NewRule.Operator" class="form-select">
-                            <option value=">">Greater than (&gt;)</option>
-                            <option value="<">Less than (&lt;)</option>
-                            <option value=">=">Greater or Equal (&gt;=)</option>
-                            <option value="<=">Less or Equal (&lt;=)</option>
+                <div class="frow">
+                    <div class="fg" style="flex:1;">
+                        <label class="fl" asp-for="NewRule.Operator">@T("au.f.op")</label>
+                        <select asp-for="NewRule.Operator" class="inp">
+                            <option value=">">@T("au.op.gt") (&gt;)</option>
+                            <option value="<">@T("au.op.lt") (&lt;)</option>
+                            <option value=">=">@T("au.op.ge") (&gt;=)</option>
+                            <option value="<=">@T("au.op.le") (&lt;=)</option>
                         </select>
-                        <span asp-validation-for="NewRule.Operator" class="text-danger small"></span>
                     </div>
-                    <div class="col-7">
-                        <label asp-for="NewRule.ThresholdValue" class="form-label small fw-semibold text-muted"></label>
-                        <input asp-for="NewRule.ThresholdValue" class="form-control" type="number" step="0.1" />
-                        <span asp-validation-for="NewRule.ThresholdValue" class="text-danger small"></span>
+                    <div class="fg" style="flex:1;">
+                        <label class="fl" asp-for="NewRule.ThresholdValue">@T("au.f.thr")</label>
+                        <input asp-for="NewRule.ThresholdValue" type="number" step="any" class="inp" placeholder="e.g. 28" required />
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="NewRule.ActionTarget" class="form-label small fw-semibold text-muted"></label>
-                    <select asp-for="NewRule.ActionTarget" class="form-select">
-                        <option value="Turn ON Exhaust Fans">Turn ON Exhaust Fans</option>
-                        <option value="Turn OFF Exhaust Fans">Turn OFF Exhaust Fans</option>
-                        <option value="Turn ON Misting Pump">Turn ON Misting Pump</option>
-                        <option value="Turn OFF Misting Pump">Turn OFF Misting Pump</option>
-                        <option value="Turn ON Drip Solenoid Valves">Turn ON Drip Solenoid Valves</option>
-                        <option value="Turn OFF Drip Solenoid Valves">Turn OFF Drip Solenoid Valves</option>
+                <div class="fg">
+                    <label class="fl" asp-for="NewRule.ActuatorId">@T("au.f.act")</label>
+                    <select asp-for="NewRule.ActuatorId" class="inp">
+                        <option value="">@T("au.f.choose")</option>
+                        @foreach (var a in Model.Actuators)
+                        {
+                            <option value="@a.ActuatorId">@RuleDisplay.Device(lang, a.Name) (@RuleDisplay.ZoneName(lang, a.Zone?.Name ?? ""))</option>
+                        }
                     </select>
-                    <span asp-validation-for="NewRule.ActionTarget" class="text-danger small"></span>
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="NewRule.Description" class="form-label small fw-semibold text-muted">Agronomic Objective / Description</label>
-                    <input asp-for="NewRule.Description" class="form-control" placeholder="e.g. Prevent rice blast spores during monsoon surge" />
-                    <span asp-validation-for="NewRule.Description" class="text-danger small"></span>
+                <div class="fg">
+                    <label class="fl">@T("au.f.do")</label>
+                    <div class="seg" role="radiogroup">
+                        <label class="seg-item">
+                            <input type="radio" asp-for="NewRule.TurnOn" value="true" checked />
+                            <span>@T("au.f.on")</span>
+                        </label>
+                        <label class="seg-item">
+                            <input type="radio" asp-for="NewRule.TurnOn" value="false" />
+                            <span>@T("au.f.off")</span>
+                        </label>
+                    </div>
                 </div>
 
-                <div class="form-check form-switch mb-3">
-                    <input asp-for="NewRule.IsActive" class="form-check-input" type="checkbox" id="ruleActiveSwitch" checked />
-                    <label class="form-check-label small fw-semibold text-dark" for="ruleActiveSwitch">Enable rule immediately</label>
+                <div class="fg">
+                    <label class="fl" asp-for="NewRule.Description">@T("au.f.note")</label>
+                    <input asp-for="NewRule.Description" class="inp" placeholder="@T("au.f.note")" maxlength="200" />
                 </div>
 
-                <button type="submit" class="btn btn-success w-100 fw-semibold shadow-sm">
-                    <i class="bi bi-save me-1"></i> Register Automation Rule
+                <label class="check" style="margin-top:4px;">
+                    <input asp-for="NewRule.IsActive" type="checkbox" />
+                    <span>@T("au.f.enable")</span>
+                </label>
+
+                <button type="submit" class="btn full" style="margin-top:10px;">
+                    @await Html.Icon("plus", 14)@T("au.add")
                 </button>
             </form>
-        </div>
-    </div>
-
-    <!-- SECTION 3: EXISTING RULES TABLE -->
-    <div class="col-12 col-lg-7">
-        <div class="card card-agri p-4 border-0 h-100 shadow-sm">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0 text-dark">
-                    <i class="bi bi-cpu-fill text-primary me-2"></i>Active Automation Rules (@Model.ExistingRules.Count)
-                </h5>
-                <span class="badge bg-primary bg-opacity-10 text-primary">Autonomous Loop</span>
+        }
+        else
+        {
+            <div class="signin-box">
+                <p class="sub" style="margin-bottom:16px;">@T("au.signin.why")</p>
+                <a asp-controller="Account" asp-action="Login" class="btn full">@T("au.signin")</a>
             </div>
+        }
+    </section>
 
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light small text-muted text-uppercase">
+    <!-- Actuators Overview -->
+    <section class="card c12" aria-labelledby="act-h">
+        <div class="ch">@await Html.Icon("power")<span id="act-h">@T("au.act.title")</span><span class="sim">@T("card.modelled")</span></div>
+        <div class="tscroll" tabindex="0" role="region" aria-label="@T("au.act.title")">
+            <table class="ttab">
+                <caption class="sr-only">@T("au.act.title")</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">@T("m.act")</th>
+                        <th scope="col">@T("m.zone")</th>
+                        <th scope="col">@T("m.status")</th>
+                        <th scope="col">@T("chart.time")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var act in Model.Actuators)
+                    {
+                        var isOn = act.CurrentStatus == "ON";
                         <tr>
-                            <th>Condition (IF)</th>
-                            <th>Target Action (THEN)</th>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
+                            <th scope="row">@RuleDisplay.Device(lang, act.Name)<span class="sim">@T("m.simulated")</span></th>
+                            <td>@RuleDisplay.ZoneName(lang, act.Zone?.Name ?? "")</td>
+                            <td>
+                                <span class="st @(isOn ? "" : "mute")">
+                                    @await Html.Icon(isOn ? "check" : "power", 14)
+                                    @T(isOn ? "m.on" : "m.off")
+                                </span>
+                            </td>
+                            <td class="sub">@string.Format(T("au.act.last"), act.LastTriggered.ToString("HH:mm"))</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var rule in Model.ExistingRules)
-                        {
-                            <tr>
-                                <td>
-                                    <div class="fw-bold text-dark">
-                                        IF <span class="text-primary">@rule.ConditionVariable</span> 
-                                        <span class="badge bg-light text-dark border">@rule.Operator</span> 
-                                        <span class="text-danger">@rule.ThresholdValue</span>
-                                    </div>
-                                    @if (!string.IsNullOrEmpty(rule.Description))
-                                    {
-                                        <div class="text-muted" style="font-size: 0.75rem;">@rule.Description</div>
-                                    }
-                                </td>
-                                <td>
-                                    <span class="badge @(rule.ActionTarget.Contains("Turn ON") ? "bg-success bg-opacity-10 text-success border border-success border-opacity-25" : "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25") px-2 py-1">
-                                        <i class="bi bi-arrow-right me-1"></i>@rule.ActionTarget
-                                    </span>
-                                </td>
-                                <td>
-                                    @if (rule.IsActive)
-                                    {
-                                        <span class="badge bg-success">Active</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary">Disabled</span>
-                                    }
-                                </td>
-                                <td class="text-end">
-                                    @if (AgriSyncIndia.Services.Permissions.CanModify(User, rule))
-                                    {
-                                    <div class="d-inline-flex gap-1">
-                                        <!-- Toggle Status Form -->
-                                        <form asp-action="ToggleRule" method="post" class="m-0">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="ruleId" value="@rule.RuleId" />
-                                            <button type="submit" class="btn btn-sm @(rule.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="Toggle Active State">
-                                                <i class="bi @(rule.IsActive ? "bi-pause-fill" : "bi-play-fill")"></i>
-                                            </button>
-                                        </form>
-
-                                        <!-- Delete Rule Form -->
-                                        <form asp-action="DeleteRule" method="post" class="m-0" onsubmit="return confirm('Remove rule #@rule.RuleId?');">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="ruleId" value="@rule.RuleId" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Rule">
-                                                <i class="bi bi-trash-fill"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
-    </div>
+        <p class="note">@T(ControlAccess.ForActuators(User).ReasonKey ?? "card.modelled")</p>
+    </section>
 </div>

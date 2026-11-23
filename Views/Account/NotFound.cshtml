@@ -1,0 +1,18 @@
+@{
+    var lang = Context.Lang();
+    string T(string k) => Localizer.T(lang, k);
+    ViewData["Title"] = T("st.404.t");
+}
+
+<div class="auth center">
+    <div class="card">
+        <div class="ico watch" style="margin: 0 auto 16px; width:44px; height:44px; border-radius:12px; display:grid; place-items:center; background:color-mix(in srgb, var(--watch) 14%, transparent); color:var(--watch);">
+            @await Html.Icon("triangle-alert", 24)
+        </div>
+        <h1 class="sec-title" style="margin-bottom:8px;">@T("st.404.t")</h1>
+        <p class="sub" style="margin-bottom:20px;">@T("st.404.b")</p>
+        <div class="cta" style="justify-content:center;">
+            <a asp-controller="Climate" asp-action="Dashboard" class="btn">@T("dash.title")</a>
+        </div>
+    </div>
+</div>
