@@ -44,7 +44,7 @@ namespace AgriSyncIndia.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("LastTriggered")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -83,7 +83,7 @@ namespace AgriSyncIndia.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .HasMaxLength(200)
@@ -135,7 +135,7 @@ namespace AgriSyncIndia.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.Property<DateTime>("TimestampIST")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -161,7 +161,7 @@ namespace AgriSyncIndia.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ClusterId"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -226,7 +226,7 @@ namespace AgriSyncIndia.Migrations
                         .HasColumnType("double precision");
 
                     b.Property<DateTime>("TimestampIST")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<double>("VPD")
                         .HasColumnType("double precision");
@@ -263,7 +263,7 @@ namespace AgriSyncIndia.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()

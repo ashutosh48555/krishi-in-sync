@@ -22,3 +22,6 @@ tests/**/TestResults/
 
 # local static smoke pages
 wwwroot/dev/
+.neon
+node_modules/
+.env.local

@@ -24,6 +24,18 @@ public class AgriSyncDbContext : DbContext, IDataProtectionKeyContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // IstClock.Now is IST wall-clock with Kind=Unspecified. Npgsql only accepts Unspecified
+        // for `timestamp without time zone`, so every DateTime column must use that type
+        // (EF's Npgsql default is `timestamp with time zone`).
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
+                    property.SetColumnType("timestamp without time zone");
+            }
+        }
+
         // Zone entity mapping
         modelBuilder.Entity<Zone>(entity =>
         {

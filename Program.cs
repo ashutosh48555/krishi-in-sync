@@ -8,6 +8,32 @@ using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Neon writes DATABASE_URL / DATABASE_URL_UNPOOLED / NEON_* into .env.local (gitignored).
+// A real environment variable always wins, so the same code runs on a host without the file.
+var dotenv = DotEnv.Read(
+    Path.Combine(builder.Environment.ContentRootPath, ".env.local"),
+    Path.Combine(builder.Environment.ContentRootPath, ".env"));
+
+string? NeonValue(string key)
+{
+    var fromEnvironment = Environment.GetEnvironmentVariable(key);
+    if (!string.IsNullOrWhiteSpace(fromEnvironment)) return fromEnvironment;
+    return dotenv.TryGetValue(key, out var fromFile) && !string.IsNullOrWhiteSpace(fromFile) ? fromFile : null;
+}
+
+// Neon's connection strings are URIs; Npgsql needs host=...;password=... . Convert only if the
+// host has not already been configured explicitly.
+var neonConfig = new Dictionary<string, string?>();
+var databaseUrl = NeonValue("DATABASE_URL");
+var directDatabaseUrl = NeonValue("DATABASE_URL_UNPOOLED") ?? databaseUrl;
+
+if (builder.Configuration.GetConnectionString("DefaultConnection") is null && databaseUrl is not null)
+    neonConfig["ConnectionStrings:DefaultConnection"] = PostgresConnection.FromEnvironmentValue(databaseUrl);
+if (builder.Configuration.GetConnectionString("Migrations") is null && directDatabaseUrl is not null)
+    neonConfig["ConnectionStrings:Migrations"] = PostgresConnection.FromEnvironmentValue(directDatabaseUrl);
+
+builder.Configuration.AddInMemoryCollection(neonConfig);
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -66,8 +92,10 @@ bool usePostgres = !string.IsNullOrWhiteSpace(connectionString);
 
 builder.Services.AddDbContext<AgriSyncDbContext>(options =>
 {
-    if (usePostgres) options.UseNpgsql(connectionString);
-    else options.UseSqlite("Data Source=AgriSyncIndia.db");
+    if (usePostgres)
+        options.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure(3));
+    else
+        options.UseSqlite("Data Source=AgriSyncIndia.db");
 });
 
 var dataProtection = builder.Services.AddDataProtection().SetApplicationName("AgriSyncIndia");
