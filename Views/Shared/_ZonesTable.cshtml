@@ -18,14 +18,14 @@
     {
         var isSel = c.Key == selected;
         var tone = ViewFormat.Tone(c.VpdBand);
-        <tr class="tr@(isSel ? " sel" : "")" data-zone="@c.Key">
+        <tr class="tr@(isSel ? " sel" : "")" data-zone="@c.Key" data-zone-id="@c.ZoneId">
             <th scope="row"><button type="button" class="zn" aria-pressed="@(isSel ? "true" : "false")"><i></i>@c.DisplayName</button></th>
             <td class="num" data-label="@T("m.temp")">
-                @if (c.HasReading) { <text>@ViewFormat.N(c.Temp) °C<small>@string.Format(T("m.target"), ViewFormat.N(c.TargetTemp)) · @ViewFormat.Gap(lang, c)</small></text> }
+                @if (c.HasReading) { <text><span data-live="temp">@ViewFormat.N(c.Temp) °C</span><small>@string.Format(T("m.target"), ViewFormat.N(c.TargetTemp)) · @ViewFormat.Gap(lang, c)</small></text> }
                 else { <text>@T("m.noreading")</text> }
             </td>
-            <td class="num" data-label="@T("m.hum")">@(c.HasReading ? ViewFormat.N(c.Humidity, 0) + " %" : "—")</td>
-            <td class="vc" data-label="@T("m.vpd")">@if (c.HasReading) {<partial name="_VpdTrack" model="c.Vpd" />}</td>
+            <td class="num" data-label="@T("m.hum")">@if (c.HasReading) {<span data-live="hum">@ViewFormat.N(c.Humidity, 0) %</span>} else {<text>—</text>}</td>
+            <td class="vc" data-label="@T("m.vpd")">@if (c.HasReading) {<span data-live="vpd" class="sr-only">@ViewFormat.N(c.Vpd, 2)</span><partial name="_VpdTrack" model="c.Vpd" />}</td>
             <td data-label="@T("m.status")">
                 @if (c.HasReading)
                 {

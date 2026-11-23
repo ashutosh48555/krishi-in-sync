@@ -34,6 +34,10 @@ if (builder.Configuration.GetConnectionString("Migrations") is null && directDat
 
 builder.Configuration.AddInMemoryCollection(neonConfig);
 
+// Public Neon endpoints for the browser (never the secret, never the database URL).
+var neonPublic = NeonOptions.From(dotenv);
+builder.Services.AddSingleton(neonPublic);
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -142,7 +146,11 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 var clerkOrigin = app.Services.GetRequiredService<ClerkOptions>().Issuer;
-var csp = SecurityHeaders.ContentSecurityPolicy(clerkOrigin);
+var neonPublicOptions = app.Services.GetRequiredService<NeonOptions>();
+var csp = SecurityHeaders.ContentSecurityPolicy(
+    clerkOrigin,
+    SecurityHeaders.Origin(neonPublicOptions.RealtimeUrl),
+    SecurityHeaders.Origin(neonPublicOptions.TelemetryUrl));
 app.Use(async (ctx, next) =>
 {
     var h = ctx.Response.Headers;

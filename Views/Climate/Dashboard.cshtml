@@ -54,7 +54,7 @@ else
     <div class="bento">
         <section class="card c12"><partial name="_HeadlineCard" model="Model" /></section>
         <section class="card c12" aria-labelledby="zones-h">
-            <div class="ch">@await Html.Icon("list")<span id="zones-h">@T("card.zones")</span><span class="sp">@T("card.modelled")</span></div>
+            <div class="ch">@await Html.Icon("list")<span id="zones-h">@T("card.zones")</span><span class="sp">@T("card.modelled")</span><span id="live-badge" class="chip nm" data-state="connecting">Connecting</span></div>
             <partial name="_ZonesTable" model="Model" />
         </section>
         <section class="card c8"><partial name="_ChartCard" model="Model" view-data='new ViewDataDictionary(ViewData) { { "kind", "temp" } }' /></section>
@@ -67,4 +67,11 @@ else
 @section Scripts {
     <script src="~/lib/chart.umd.min.js"></script>
     <script src="~/js/charts.js" asp-append-version="true"></script>
+    @inject NeonOptions Neon
+    @if (Neon.RealtimeEnabled)
+    {
+        <meta name="neon-telemetry-url" content="@Neon.TelemetryUrl" />
+        <meta name="neon-realtime-url" content="@Neon.RealtimeUrl" />
+        <script type="module" src="~/js/live-zones.js" asp-append-version="true"></script>
+    }
 }
