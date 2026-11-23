@@ -3,15 +3,16 @@
     string T(string k) => Localizer.T(lang, k);
     ViewData["Title"] = T("st.404.t");
 }
+@section Head { <link rel="stylesheet" href="~/css/pages-b.css" asp-append-version="true" /> }
 
-<div class="auth center">
+<div class="st-card">
     <div class="card">
-        <div class="ico watch" style="margin: 0 auto 16px; width:44px; height:44px; border-radius:12px; display:grid; place-items:center; background:color-mix(in srgb, var(--watch) 14%, transparent); color:var(--watch);">
+        <div class="st-ico watch">
             @await Html.Icon("triangle-alert", 24)
         </div>
-        <h1 class="sec-title" style="margin-bottom:8px;">@T("st.404.t")</h1>
-        <p class="sub" style="margin-bottom:20px;">@T("st.404.b")</p>
-        <div class="cta" style="justify-content:center;">
+        <h1 class="sec-title st-title">@T("st.404.t")</h1>
+        <p class="sub st-sub">@T("st.404.b")</p>
+        <div class="cta st-cta">
             <a asp-controller="Climate" asp-action="Dashboard" class="btn">@T("dash.title")</a>
         </div>
     </div>

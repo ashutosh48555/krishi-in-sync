@@ -13,14 +13,14 @@
     </div>
 </div>
 
-<div class="card" style="max-width: 620px; margin: 0 auto;">
+<div class="card form-card">
     <form asp-action="Create" method="post" class="form-grid">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="ReturnUrl" />
 
         @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
         {
-            <div class="notice" style="border-color:var(--crit); background:color-mix(in srgb, var(--crit) 10%, transparent); margin: 0 0 16px;">
+            <div class="notice form-err-box">
                 @await Html.Icon("triangle-alert")
                 <div>
                     @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
@@ -44,19 +44,19 @@
         </div>
 
         <div class="frow">
-            <div class="fg" style="flex:1;">
+            <div class="fg fg-1">
                 <label class="fl" asp-for="Latitude">@T("cl.f.lat")</label>
                 <input asp-for="Latitude" type="number" step="any" id="f-lat" class="inp" placeholder="28.6139" />
             </div>
-            <div class="fg" style="flex:1;">
+            <div class="fg fg-1">
                 <label class="fl" asp-for="Longitude">@T("cl.f.lon")</label>
                 <input asp-for="Longitude" type="number" step="any" id="f-lon" class="inp" placeholder="77.2090" />
             </div>
         </div>
-        <p class="sub" style="margin-top:-6px; font-size:12px;">@T("cl.f.hint")</p>
+        <p class="sub hint-sub">@T("cl.f.hint")</p>
 
         <div class="presets-row">
-            <span class="sub" style="font-size:12px;">Presets:</span>
+            <span class="sub preset-label">Presets:</span>
             <button type="button" class="btn-preset" onclick="setLoc(28.6139, 77.2090)">Delhi</button>
             <button type="button" class="btn-preset" onclick="setLoc(30.9010, 75.8573)">Ludhiana</button>
             <button type="button" class="btn-preset" onclick="setLoc(29.6857, 76.9905)">Karnal</button>
@@ -64,27 +64,24 @@
             <button type="button" class="btn-preset" onclick="setLoc(22.5645, 72.9289)">Anand</button>
         </div>
 
-        <div class="frow" style="margin-top:12px;">
-            <div class="fg" style="flex:1;">
+        <div class="frow mt-12">
+            <div class="fg fg-1">
                 <label class="fl" asp-for="TotalAcreage">@T("cl.f.acres")</label>
                 <input asp-for="TotalAcreage" type="number" step="any" class="inp" placeholder="25" required />
             </div>
-            <div class="fg" style="flex:2;">
+            <div class="fg fg-2">
                 <label class="fl" asp-for="PrimaryCrops">@T("cl.f.crops")</label>
                 <input asp-for="PrimaryCrops" class="inp" placeholder="@T("cl.f.cropsph")" required />
             </div>
         </div>
 
-        <div class="cta" style="margin-top:20px;">
+        <div class="cta mt-20">
             <button type="submit" class="btn">@await Html.Icon("check", 14)@T("cl.f.submit")</button>
             <a asp-action="Index" class="btn sec">@T("cl.f.cancel")</a>
         </div>
     </form>
 </div>
 
-<script>
-function setLoc(lat, lon) {
-    document.getElementById('f-lat').value = lat;
-    document.getElementById('f-lon').value = lon;
+@section Scripts {
+    <script src="~/js/cluster.js" asp-append-version="true"></script>
 }
-</script>

@@ -25,17 +25,17 @@
                 <span class="v">@(hasSoilReading ? ViewFormat.N(Model.SoilMetrics.VolumetricWaterContent, 1) : "—")<small>%</small></span>
                 @if (soilStatus.HasValue)
                 {
-                    <span class="st @soilStatus.Value.Tone" style="margin-top:6px;">@T("soil." + soilStatus.Value.Key)</span>
+                    <span class="st @soilStatus.Value.Tone mt-6">@T("soil." + soilStatus.Value.Key)</span>
                 }
                 else
                 {
-                    <span class="sub" style="margin-top:4px;">@T("dash.noupdate")</span>
+                    <span class="sub mt-4">@T("dash.noupdate")</span>
                 }
             </div>
             <div class="met">
                 <span class="k">@await Html.Icon("thermometer", 14)@T("au.soil.temp")</span>
                 <span class="v">@(Model.SoilMetrics.RootZoneTemperature.HasValue ? ViewFormat.N(Model.SoilMetrics.RootZoneTemperature, 1) : "—")<small>°C</small></span>
-                <span class="sub" style="margin-top:4px;">@(Model.SoilMetrics.RootZoneTemperature.HasValue ? T("zone.drip") : T("dash.noupdate"))</span>
+                <span class="sub mt-4">@(Model.SoilMetrics.RootZoneTemperature.HasValue ? T("zone.drip") : T("dash.noupdate"))</span>
             </div>
         </div>
     </section>
@@ -47,7 +47,7 @@
             <span id="rules-h">@T("au.rules")</span>
             <span class="sp">@Model.ExistingRules.Count</span>
         </div>
-        <p class="sub" style="margin-bottom:14px;">@T("au.scope")</p>
+        <p class="sub mb-14">@T("au.scope")</p>
 
         @if (Model.ExistingRules.Count == 0)
         {
@@ -119,7 +119,7 @@
                 @Html.AntiForgeryToken()
                 @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
                 {
-                    <div class="notice" style="border-color:var(--crit); background:color-mix(in srgb, var(--crit) 10%, transparent); margin: 0 0 16px;">
+                    <div class="notice form-err-box">
                         @await Html.Icon("triangle-alert")
                         <div>
                             @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
@@ -140,7 +140,7 @@
                 </div>
 
                 <div class="frow">
-                    <div class="fg" style="flex:1;">
+                    <div class="fg fg-1">
                         <label class="fl" asp-for="NewRule.Operator">@T("au.f.op")</label>
                         <select asp-for="NewRule.Operator" class="inp">
                             <option value=">">@T("au.op.gt") (&gt;)</option>
@@ -149,7 +149,7 @@
                             <option value="<=">@T("au.op.le") (&lt;=)</option>
                         </select>
                     </div>
-                    <div class="fg" style="flex:1;">
+                    <div class="fg fg-1">
                         <label class="fl" asp-for="NewRule.ThresholdValue">@T("au.f.thr")</label>
                         <input asp-for="NewRule.ThresholdValue" type="number" step="any" class="inp" placeholder="e.g. 28" required />
                     </div>
@@ -185,12 +185,12 @@
                     <input asp-for="NewRule.Description" class="inp" placeholder="@T("au.f.note")" maxlength="200" />
                 </div>
 
-                <label class="check" style="margin-top:4px;">
+                <label class="check mt-4">
                     <input asp-for="NewRule.IsActive" type="checkbox" />
                     <span>@T("au.f.enable")</span>
                 </label>
 
-                <button type="submit" class="btn full" style="margin-top:10px;">
+                <button type="submit" class="btn full mt-10">
                     @await Html.Icon("plus", 14)@T("au.add")
                 </button>
             </form>
@@ -198,7 +198,7 @@
         else
         {
             <div class="signin-box">
-                <p class="sub" style="margin-bottom:16px;">@T("au.signin.why")</p>
+                <p class="sub mb-16">@T("au.signin.why")</p>
                 <a asp-controller="Account" asp-action="Login" class="btn full">@T("au.signin")</a>
             </div>
         }

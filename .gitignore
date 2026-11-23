@@ -25,3 +25,6 @@ wwwroot/dev/
 .neon
 node_modules/
 .env.local
+
+# Not committed: secrets live here only. Keep in sync with .env.local from `neon env pull`.
+.env
