@@ -1,0 +1,75 @@
+@* One zone card. Model = TopoZone; ViewData["canToggle"] = bool, ViewData["lang"] = string. Numbers come from the DB; no reading means no numbers. *@
+@model TopoZone
+@{
+    var lang = (string)ViewData["lang"]!;
+    var canToggle = ViewData["canToggle"] is true;
+    var c = Model.Card;
+    string T(string k) => Localizer.T(lang, k);
+    var tone = ViewFormat.Tone(c.VpdBand);
+}
+<article class="card zc" id="zone-@c.Key" tabindex="-1" aria-labelledby="zh-@c.Key">
+    <div class="zhd">
+        <h2 class="zt" id="zh-@c.Key">@c.DisplayName</h2>
+        @if (c.HasReading)
+        {
+            <span class="st @tone">@await Html.Icon(tone == "" ? "check" : "triangle-alert", 14)@ViewFormat.Band(lang, c.VpdBand)</span>
+        }
+        else
+        {
+            <span class="st mute">@T("m.noreading")</span>
+        }
+    </div>
+    <p class="sub">@Model.CropType · @T("z.area") @string.Format(T("z.areaval"), ViewFormat.N(Model.AreaSqMeters, 0))</p>
+
+    @if (c.HasReading)
+    {
+        <div class="zmets">
+            <div class="met">
+                <div class="k">@await Html.Icon("thermometer", 16)@T("m.temp")</div>
+                <div class="v">@ViewFormat.N(c.Temp)<small>°C</small></div>
+                <small class="an">@string.Format(T("m.target"), ViewFormat.N(c.TargetTemp) + " °C") · @ViewFormat.Gap(lang, c)</small>
+            </div>
+            <div class="met">
+                <div class="k">@await Html.Icon("droplet", 16)@T("m.hum")</div>
+                <div class="v">@ViewFormat.N(c.Humidity, 0)<small>%</small></div>
+                <small class="an">@string.Format(T("m.target"), ViewFormat.N(c.TargetHumidity, 0) + " %")</small>
+            </div>
+        </div>
+        <div class="zvpd">
+            <div class="k">@await Html.Icon("wind", 16)<span>@T("m.vpdhead")</span><b>@ViewFormat.N(c.Vpd, 2)</b></div>
+            <partial name="_VpdTrack" model="c.Vpd" />
+        </div>
+        <p class="an">@string.Format(T("z.last"), Model.LastReading)</p>
+    }
+    else
+    {
+        <p class="empty">@T("m.noreading")</p>
+        <p class="an">@T("m.noreadinghint")</p>
+    }
+
+    <h3 class="ah">@T("z.actuators")<span class="sim">@T("m.simulated")</span></h3>
+    @if (Model.Actuators.Count == 0)
+    {
+        <p class="an">@T("z.noact")</p>
+    }
+    else
+    {
+        <ul class="acts">
+            @foreach (var a in Model.Actuators)
+            {
+                <li>
+                    <span class="an-n">@a.Name<small>@a.DeviceType · @T(a.Auto ? "z.auto" : "z.manual")</small></span>
+                    <span class="st @(a.On ? "" : "mute")">@await Html.Icon("power", 14)@T(a.On ? "m.on" : "m.off")</span>
+                    @if (canToggle)
+                    {
+                        <form asp-controller="Climate" asp-action="ToggleActuator" method="post">
+                            <input type="hidden" name="actuatorId" value="@a.Id" />
+                            <input type="hidden" name="returnUrl" value="@Url.Action("Topology", "Climate")" />
+                            <button type="submit" class="btn sec sm" aria-label="@T(a.On ? "z.turnoff" : "z.turnon") @a.Name">@T(a.On ? "z.turnoff" : "z.turnon")</button>
+                        </form>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</article>

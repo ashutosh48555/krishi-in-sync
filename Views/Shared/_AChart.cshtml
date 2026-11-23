@@ -1,0 +1,37 @@
+@* History chart card + "View data as table". Model = HistoryViewModel; ViewData["kind"] = "temp" or "vpd". Drawn by charts.js from #chart-data. *@
+@model HistoryViewModel
+@{
+    var lang = Model.CurrentLanguage;
+    var isTemp = (string)ViewData["kind"]! == "temp";
+    var kind = isTemp ? "temp" : "vpd";
+    string T(string k) => Localizer.T(lang, k);
+    var title = string.Format(T(isTemp ? "h.t" : "h.v"), T(Model.Range == "7d" ? "h.rl7" : "h.rl24"));
+    var unit = isTemp ? "°C" : "kPa";
+    var dec = isTemp ? 1 : 2;
+    var series = Model.Chart.Series;
+    var labels = Model.Chart.Labels;
+    double? Last(List<double?> v) => v.LastOrDefault(x => x != null);
+    var latest = string.Join(", ", series.Select(s => $"{s.Name} {ViewFormat.N(Last(isTemp ? s.Temp : s.Vpd), dec)} {unit}"));
+    var aria = string.Format(T("h.aria"), title + ".", labels[0], labels[^1], latest);
+}
+<div class="ch">@await Html.Icon("line-chart")<span>@title</span>
+    @if (!isTemp) {<span class="sp">@T("chart.band")</span>}
+</div>
+@if (Model.SelectedZoneId == null)
+{
+    <ul class="lgd">@foreach (var s in series) {<li><i class="k-@s.Key"></i>@s.Name</li>}</ul>
+}
+<div class="cv"><canvas data-chart="@kind" role="img" aria-label="@aria"></canvas></div>
+<button type="button" class="btn sec sm tgl" data-table-toggle="tbl-@kind" aria-expanded="false" data-show="@T("chart.table")" data-hide="@T("chart.hide")">@T("chart.table")</button>
+<div class="tscroll" id="tbl-@kind" hidden tabindex="0" role="region" aria-label="@title">
+    <table class="dtable">
+        <caption class="sr-only">@title (@unit)</caption>
+        <thead><tr><th scope="col">@T("chart.time")</th>@foreach (var s in series) {<th scope="col">@s.Name</th>}</tr></thead>
+        <tbody>
+        @for (var i = 0; i < labels.Count; i++)
+        {
+            <tr><th scope="row">@labels[i]</th>@foreach (var s in series) {<td>@ViewFormat.N((isTemp ? s.Temp : s.Vpd)[i], dec)</td>}</tr>
+        }
+        </tbody>
+    </table>
+</div>

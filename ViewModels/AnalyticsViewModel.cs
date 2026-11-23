@@ -1,39 +1,22 @@
-using AgriSyncIndia.Services;
-using System.ComponentModel.DataAnnotations;
-using AgriSyncIndia.Models;
-
 namespace AgriSyncIndia.ViewModels;
 
-public class AnalyticsViewModel
+/// <summary>Min, average and maximum of one measure over the selected range (from stored SensorLogs).</summary>
+public record Stat(double Min, double Avg, double Max);
+
+public record ZoneOption(int Id, string Name);
+
+/// <summary>History page: range (24h or 7d), optional zone, summary cards and hourly chart data.</summary>
+public class HistoryViewModel
 {
-    [Display(Name = "Start Date")]
-    [DataType(DataType.Date)]
-    public DateTime StartDate { get; set; } = IstClock.Now.AddDays(-1);
-
-    [Display(Name = "End Date")]
-    [DataType(DataType.Date)]
-    public DateTime EndDate { get; set; } = IstClock.Now;
-
-    [Display(Name = "Agricultural Zone")]
+    public string CurrentLanguage { get; set; } = "en";
+    public string Range { get; set; } = "24h";
     public int? SelectedZoneId { get; set; }
-
-    public List<Zone> AvailableZones { get; set; } = new();
-
-    // Summary Statistics
-    public double AvgTemp { get; set; }
-    public double MinTemp { get; set; }
-    public double MaxTemp { get; set; }
-    public double AvgHumidity { get; set; }
-    public double AvgVPD { get; set; }
-    public double AvgSoilMoisture { get; set; }
-
-    // Chart Data for Multi-trend Chart.js
-    public List<string> ChartTimestamps { get; set; } = new();
-    public List<double> ChartTemperatures { get; set; } = new();
-    public List<double> ChartHumidities { get; set; } = new();
-    public List<double> ChartVPDs { get; set; } = new();
-    public List<double> ChartSoilMoistures { get; set; } = new();
-
-    // Tabular Records
-    public List<SensorLog> HistoricalRecords { get; set; } = new();
+    public List<ZoneOption> Zones { get; set; } = new();
+    public int SampleCount { get; set; }
+    public Stat? Temp { get; set; }
+    public Stat? Humidity { get; set; }
+    public Stat? Vpd { get; set; }
+    public ChartDataViewModel Chart { get; set; } = new();
+    /// <summary>Zone key when one zone is chosen, otherwise "all" (every zone drawn in its own series colour).</summary>
+    public string Selected { get; set; } = "all";
 }
