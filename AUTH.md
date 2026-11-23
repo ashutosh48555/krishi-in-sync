@@ -43,7 +43,8 @@ Password login refuses users whose `PasswordHash` is empty. The local Register p
 
 ## 5. Authorization
 Public: Home, Dashboard, Zones, History, Alerts list, Clusters list. `[Authorize]` on every POST and on create, edit and delete pages: cluster create, automation rules,
-actuator toggles, alert acknowledge, refresh readings. Unauthenticated users go to Login with `returnUrl`. Unknown or foreign resource IDs return 404 for everyone.
+actuator toggles, alert acknowledge, refresh readings. Unauthenticated users go to Login with `returnUrl`.
+Ownership: new Clerk users get role `Viewer`. Any signed-in user may create a rule (stored with `OwnerUserId`); edit, delete or toggle needs ownership or role Farm Manager / Agronomist. Actuator toggles and alert acknowledgement need Farm Manager / Agronomist. Anything not permitted returns 404, not 403, so IDs cannot be probed. Email linking to an existing row needs a verified email (token `email_verified` claim or Backend API `verification.status = verified`); otherwise sign-in is refused. Unknown or foreign resource IDs return 404 for everyone.
 
 ## 6. Cookies, proxy, keys
 - `Program.cs`: `UseForwardedHeaders` first (Render's proxy), cookies `Secure`, `HttpOnly`, `SameSite=Lax`.

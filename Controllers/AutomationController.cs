@@ -112,6 +112,7 @@ public class AutomationController : Controller
             Description = string.IsNullOrWhiteSpace(model.NewRule.Description)
                 ? $"IF {model.NewRule.ConditionVariable} {model.NewRule.Operator} {model.NewRule.ThresholdValue} THEN {model.NewRule.ActionTarget}"
                 : model.NewRule.Description,
+            OwnerUserId = Permissions.UserId(User),
             CreatedAt = IstClock.Now
         };
 
@@ -131,7 +132,8 @@ public class AutomationController : Controller
     public async Task<IActionResult> ToggleRule(int ruleId)
     {
         var rule = await _context.AutomationRules.FindAsync(ruleId);
-        if (rule == null) return NotFound();
+        // 404 (not 403) for records the caller may not touch, so IDs cannot be probed.
+        if (rule == null || !Permissions.CanModify(User, rule)) return NotFound();
         rule.IsActive = !rule.IsActive;
         await _context.SaveChangesAsync();
         TempData["SuccessMessage"] = $"Rule #{rule.RuleId} is now {(rule.IsActive ? "ACTIVE" : "DISABLED")}.";
@@ -148,7 +150,8 @@ public class AutomationController : Controller
     public async Task<IActionResult> DeleteRule(int ruleId)
     {
         var rule = await _context.AutomationRules.FindAsync(ruleId);
-        if (rule == null) return NotFound();
+        // 404 (not 403) for records the caller may not touch, so IDs cannot be probed.
+        if (rule == null || !Permissions.CanModify(User, rule)) return NotFound();
         _context.AutomationRules.Remove(rule);
         await _context.SaveChangesAsync();
         TempData["SuccessMessage"] = $"Rule #{ruleId} removed from farm logic.";

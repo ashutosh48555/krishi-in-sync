@@ -23,3 +23,9 @@
 - `git grep -nI "sk_\|clerk.*secret"` -> only AUTH.md and PLAN.md prose (key names, `sk_...` placeholder). No values in files.
 - NOT verified (needs real Clerk keys): the live sign-in, `Clerk.redirectToSignIn` option names, real token `iss`/`azp` values, JWKS fetch over the network, Clerk script CSP needs (telemetry, img hosts), `Clerk.signOut` redirect, Backend API email fallback.
 - Known gap: CSP still allows `'unsafe-inline'`, jsDelivr and Google Fonts because the current layout depends on them; Phase 3 removes them.
+
+## Phase 2 fixes
+- Verified-email linking: unverified email on a seeded address is refused with "This email belongs to an existing account..." and the row keeps `ClerkUserId` null; verified (token `email_verified` or Backend API `verification.status=verified`) links; new email inserts as Viewer.
+- Ownership: `AutomationRule.OwnerUserId` (migration `AddRuleOwner`); non-owner Viewer gets 404 on delete/toggle, owner succeeds, Farm Manager / Agronomist succeed; actuator toggle and alert acknowledge need an operator role.
+- `dotnet build -warnaserror` -> 0 warnings; `dotnet test` -> `Passed: 65`. Fresh SQLite run: `/Automation` 200, `/healthz` 200.
+- Not verified: migration applied to a real Postgres; `email_verified` claim name in a real Clerk token; browser flow as a Clerk Viewer.

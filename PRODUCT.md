@@ -44,3 +44,5 @@ Real hardware, SMS, payments, multi-tenant admin, mobile app, a SPA rewrite. Ser
 
 ## Rubric
 INT402 rubric: **paste it into PLAN.md section 7**. If it is empty, ask the user for it before Phase 5.
+
+**Edit rights.** Anyone signed in can add an automation rule and manage their own. Changing seeded rules, toggling actuators and acknowledging alerts is limited to the Farm Manager and Agronomist roles. New sign-ups are Viewers.

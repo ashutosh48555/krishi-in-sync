@@ -105,7 +105,7 @@ public class AlertsController : Controller
     public async Task<IActionResult> Acknowledge(int alertId, string? severity)
     {
         var alert = await _context.ClimateAlerts.FindAsync(alertId);
-        if (alert == null) return NotFound();
+        if (alert == null || !Permissions.IsOperator(User)) return NotFound();
         alert.IsAcknowledged = true;
         await _context.SaveChangesAsync();
         TempData["SuccessMessage"] = $"Alert '{alert.Title}' marked as acknowledged.";

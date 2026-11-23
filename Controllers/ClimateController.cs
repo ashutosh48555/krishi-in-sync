@@ -235,7 +235,7 @@ public class ClimateController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleActuator(int actuatorId, string? returnUrl)
     {
-        if (!await _context.Actuators.AnyAsync(a => a.ActuatorId == actuatorId)) return NotFound();
+        if (!Permissions.IsOperator(User) || !await _context.Actuators.AnyAsync(a => a.ActuatorId == actuatorId)) return NotFound();
         await _weatherService.ToggleActuatorAsync(actuatorId);
         TempData["SuccessMessage"] = $"Actuator #{actuatorId} status successfully toggled.";
 

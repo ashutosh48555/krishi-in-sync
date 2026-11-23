@@ -36,5 +36,8 @@ public class AutomationRule
     [StringLength(200)]
     public string? Description { get; set; }
 
+    /// <summary>Creating user. Null for seeded rows (only Farm Manager / Agronomist may change those).</summary>
+    public int? OwnerUserId { get; set; }
+
     public DateTime CreatedAt { get; set; } = IstClock.Now;
 }

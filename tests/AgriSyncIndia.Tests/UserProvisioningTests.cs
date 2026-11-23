@@ -24,26 +24,70 @@ public class UserProvisioningTests : IDisposable
 
     UserProvisioning Sut() => new(_db, new HttpClient(), new ClerkOptions());
 
+    sealed class Stub(string json) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage r, CancellationToken c) =>
+            Task.FromResult(new HttpResponseMessage { Content = new StringContent(json) });
+    }
+
+    UserProvisioning WithBackend(string status, string email = "old@farm.in") => new(_db,
+        new HttpClient(new Stub("{\"primary_email_address_id\":\"e1\",\"first_name\":\"O\",\"last_name\":\"L\",\"email_addresses\":[{\"id\":\"e1\",\"email_address\":\"" + email + "\",\"verification\":{\"status\":\"" + status + "\"}}]}")),
+        new ClerkOptions { SecretKey = "test-secret" });
+
+    async Task SeedOld() { _db.Users.Add(new User { FullName = "Old", Email = "old@farm.in", PasswordHash = "x", Role = "Farm Manager" }); await _db.SaveChangesAsync(); }
+
     [Fact]
     public async Task New_user_is_inserted()
     {
         var r = await Sut().ProvisionAsync(new ClerkIdentity("user_1", "New@Farm.in", "Nina"));
         Assert.True(r.Succeeded);
         var u = await _db.Users.SingleAsync();
-        Assert.Equal(("Nina", "new@farm.in", "Agronomist", "", "user_1"),
+        Assert.Equal(("Nina", "new@farm.in", "Viewer", "", "user_1"),
             (u.FullName, u.Email, u.Role, u.PasswordHash, u.ClerkUserId));
     }
 
     [Fact]
-    public async Task Existing_email_is_linked_not_duplicated()
+    public async Task Unverified_email_on_existing_row_is_rejected_and_not_linked()
     {
-        _db.Users.Add(new User { FullName = "Old", Email = "old@farm.in", PasswordHash = "x", Role = "Farm Manager" });
-        await _db.SaveChangesAsync();
-        var r = await Sut().ProvisionAsync(new ClerkIdentity("user_2", "OLD@farm.in", "Old"));
+        await SeedOld();
+        var r = await Sut().ProvisionAsync(new ClerkIdentity("user_2", "old@farm.in", "Old"));
+        Assert.False(r.Succeeded);
+        Assert.Equal("This email belongs to an existing account. Use the demo login or ask an admin.", r.Error);
+        var u = await _db.Users.SingleAsync();
+        Assert.Null(u.ClerkUserId);
+    }
+
+    [Fact]
+    public async Task Token_email_verified_claim_links_existing_row()
+    {
+        await SeedOld();
+        var r = await Sut().ProvisionAsync(new ClerkIdentity("user_2", "OLD@farm.in", "Old", true));
         Assert.True(r.Succeeded);
         var u = await _db.Users.SingleAsync();
-        Assert.Equal("user_2", u.ClerkUserId);
-        Assert.Equal("Farm Manager", u.Role);
+        Assert.Equal(("user_2", "Farm Manager"), (u.ClerkUserId, u.Role));
+    }
+
+    [Fact]
+    public async Task Backend_api_verified_email_links_existing_row()
+    {
+        await SeedOld();
+        Assert.True((await WithBackend("verified").ProvisionAsync(new ClerkIdentity("user_2", "old@farm.in", "Old"))).Succeeded);
+        Assert.Equal("user_2", (await _db.Users.SingleAsync()).ClerkUserId);
+    }
+
+    [Fact]
+    public async Task Backend_api_unverified_email_is_rejected()
+    {
+        await SeedOld();
+        Assert.False((await WithBackend("unverified").ProvisionAsync(new ClerkIdentity("user_2", "old@farm.in", "Old"))).Succeeded);
+        Assert.Null((await _db.Users.SingleAsync()).ClerkUserId);
+    }
+
+    [Fact]
+    public async Task Backend_api_different_email_is_rejected()
+    {
+        await SeedOld();
+        Assert.False((await WithBackend("verified", "other@farm.in").ProvisionAsync(new ClerkIdentity("user_2", "old@farm.in", "Old"))).Succeeded);
     }
 
     [Fact]

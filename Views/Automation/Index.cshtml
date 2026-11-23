@@ -203,6 +203,8 @@
                                     }
                                 </td>
                                 <td class="text-end">
+                                    @if (AgriSyncIndia.Services.Permissions.CanModify(User, rule))
+                                    {
                                     <div class="d-inline-flex gap-1">
                                         <!-- Toggle Status Form -->
                                         <form asp-action="ToggleRule" method="post" class="m-0">
@@ -222,6 +224,7 @@
                                             </button>
                                         </form>
                                     </div>
+                                    }
                                 </td>
                             </tr>
                         }

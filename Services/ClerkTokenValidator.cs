@@ -5,7 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AgriSyncIndia.Services;
 
-public sealed record ClerkIdentity(string Sub, string? Email, string? Name);
+public sealed record ClerkIdentity(string Sub, string? Email, string? Name, bool EmailVerified = false);
 
 public sealed record ClerkTokenResult(ClerkIdentity? Identity, string? Error)
 {
@@ -83,6 +83,8 @@ public sealed class ClerkTokenValidator(IClerkKeyProvider keys, ClerkOptions opt
 
         jwt.TryGetPayloadValue<string>("email", out var email);
         jwt.TryGetPayloadValue<string>("name", out var name);
-        return new ClerkTokenResult(new ClerkIdentity(sub, email, name), null);
+        // Optional claim (needs adding to the session token template); absent means "not proven".
+        var verified = jwt.TryGetPayloadValue<bool>("email_verified", out var ev) && ev;
+        return new ClerkTokenResult(new ClerkIdentity(sub, email, name, verified), null);
     }
 }

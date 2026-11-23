@@ -82,3 +82,5 @@ Render dashboard, Deploys, last good deploy, "Rollback". Or `git revert` the mer
 
 ## 8. Submission pack (INT402)
 Live URL, repo URL, demo credentials, README with screenshots (light and dark), 90-second video, rubric-to-feature table (PLAN.md section 7). Repo public or evaluator has access.
+
+Note: the login rate limiter keys on the client IP. Before relying on it, check which `X-Forwarded-For` hop Render actually sets for the real client address (hop count), since `KnownProxies` is cleared in `Program.cs`.

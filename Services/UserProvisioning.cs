@@ -15,22 +15,32 @@ public sealed record ProvisionResult(User? User, string? Error)
 /// <summary>Maps a verified Clerk identity to a local User row (find, link, or insert).</summary>
 public sealed class UserProvisioning(AgriSyncDbContext db, HttpClient http, ClerkOptions options)
 {
+    public const string ExistingAccountMessage = "This email belongs to an existing account. Use the demo login or ask an admin.";
+
     public async Task<ProvisionResult> ProvisionAsync(ClerkIdentity id, CancellationToken ct = default)
     {
         var byId = await db.Users.FirstOrDefaultAsync(u => u.ClerkUserId == id.Sub, ct);
         if (byId != null) return new(byId, null);
 
         var (email, name) = (id.Email?.Trim().ToLowerInvariant(), id.Name?.Trim());
-        if (string.IsNullOrEmpty(email) && !string.IsNullOrWhiteSpace(options.SecretKey))
-            (email, name) = await FetchProfileAsync(id.Sub, name, ct);
+        var verified = id.EmailVerified && !string.IsNullOrEmpty(email);
+        if ((string.IsNullOrEmpty(email) || !verified) && !string.IsNullOrWhiteSpace(options.SecretKey))
+        {
+            // The Backend API only returns the primary email when Clerk marks it verified.
+            var (backendEmail, backendName) = await FetchProfileAsync(id.Sub, name, ct);
+            name = backendName;
+            if (string.IsNullOrEmpty(email)) email = backendEmail;
+            verified = !string.IsNullOrEmpty(backendEmail) && backendEmail == email;
+        }
         if (string.IsNullOrEmpty(email))
             return new(null, "Your Clerk account has no email address. Add one in Clerk and sign in again.");
 
         var byEmail = await db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email, ct);
         if (byEmail != null)
         {
+            // Linking trusts the email, so only a verified one may claim an existing row (no takeover of seeded accounts).
             // Never re-point an account that already belongs to a different Clerk user.
-            if (byEmail.ClerkUserId != null) return new(null, "This email is already linked to another sign-in.");
+            if (!verified || byEmail.ClerkUserId != null) return new(null, ExistingAccountMessage);
             byEmail.ClerkUserId = id.Sub;
             await db.SaveChangesAsync(ct);
             return new(byEmail, null);
@@ -40,7 +50,7 @@ public sealed class UserProvisioning(AgriSyncDbContext db, HttpClient http, Cler
         {
             FullName = string.IsNullOrWhiteSpace(name) ? email.Split('@')[0] : Trunc(name, 100),
             Email = email,
-            Role = "Agronomist",
+            Role = "Viewer",
             PasswordHash = "",
             ClerkUserId = id.Sub,
             CreatedAt = IstClock.Now

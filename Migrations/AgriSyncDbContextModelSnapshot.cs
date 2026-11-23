@@ -97,6 +97,9 @@ namespace AgriSyncIndia.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
+                    b.Property<int?>("OwnerUserId")
+                        .HasColumnType("integer");
+
                     b.Property<double>("ThresholdValue")
                         .HasColumnType("double precision");
 
