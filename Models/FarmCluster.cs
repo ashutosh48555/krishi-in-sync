@@ -1,3 +1,4 @@
+using AgriSyncIndia.Services;
 using System.ComponentModel.DataAnnotations;
 
 namespace AgriSyncIndia.Models;
@@ -44,5 +45,5 @@ public class FarmCluster
     [StringLength(30)]
     public string Status { get; set; } = "Active"; // Active, Planning, Maintenance
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddHours(5.5);
+    public DateTime CreatedAt { get; set; } = IstClock.Now;
 }

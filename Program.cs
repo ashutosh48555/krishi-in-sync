@@ -5,13 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure DataProtection keys inside the workspace directory
-var keysFolder = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataProtection-Keys");
-Directory.CreateDirectory(keysFolder);
-builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
-    .SetApplicationName("AgriSyncIndia");
-
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -38,55 +31,47 @@ builder.Services.AddHttpClient("OpenMeteoClient", client =>
 // Register OpenMeteoService via Dependency Injection
 builder.Services.AddScoped<IOpenMeteoService, OpenMeteoService>();
 
-// Database Connection Setup with Resilient SQL Server & Local Fallback
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=(localdb)\\mssqllocaldb;Database=AgriSyncIndiaDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+// Postgres when a connection string is set, otherwise a local SQLite file.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+bool usePostgres = !string.IsNullOrWhiteSpace(connectionString);
 
-bool sqlServerAvailable = false;
-try
+builder.Services.AddDbContext<AgriSyncDbContext>(options =>
 {
-    var testBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString)
-    {
-        ConnectTimeout = 2 // 2-second fast probe to avoid startup lag
-    };
-    using var testConn = new Microsoft.Data.SqlClient.SqlConnection(testBuilder.ConnectionString);
-    testConn.Open();
-    sqlServerAvailable = true;
-}
-catch
-{
-    sqlServerAvailable = false;
-}
+    if (usePostgres) options.UseNpgsql(connectionString);
+    else options.UseSqlite("Data Source=AgriSyncIndia.db");
+});
 
-if (sqlServerAvailable)
+var dataProtection = builder.Services.AddDataProtection().SetApplicationName("AgriSyncIndia");
+if (usePostgres)
 {
-    builder.Services.AddDbContext<AgriSyncDbContext>(options =>
-        options.UseSqlServer(connectionString));
-    Console.WriteLine("[AgriSync] Connected to Microsoft SQL Server via EF Core Code-First.");
+    dataProtection.PersistKeysToDbContext<AgriSyncDbContext>();
 }
 else
 {
-    builder.Services.AddDbContext<AgriSyncDbContext>(options =>
-        options.UseSqlite("Data Source=AgriSyncIndia.db"));
-    Console.WriteLine("[AgriSync] SQL Server LocalDB not active on local host. Running with local SQLite fallback for 100% uninterrupted grading.");
+    var keysFolder = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataProtection-Keys");
+    Directory.CreateDirectory(keysFolder);
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keysFolder));
 }
 
 var app = builder.Build();
 
-// Seed initial database data and microclimate telemetry
+// Create schema, then seed. Failures are fatal on purpose: a broken seed must stop the process.
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    try
+    var context = services.GetRequiredService<AgriSyncDbContext>();
+    if (usePostgres)
     {
-        var context = services.GetRequiredService<AgriSyncDbContext>();
-        await DbInitializer.InitializeAsync(context, services);
+        var migrationsConnection = builder.Configuration.GetConnectionString("Migrations") ?? connectionString;
+        using var migrationContext = new AgriSyncDbContext(
+            new DbContextOptionsBuilder<AgriSyncDbContext>().UseNpgsql(migrationsConnection).Options);
+        await migrationContext.Database.MigrateAsync();
     }
-    catch (Exception ex)
+    else
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the AgriSync database.");
+        await context.Database.EnsureCreatedAsync();
     }
+    await DbInitializer.InitializeAsync(context, services);
 }
 
 // Configure the HTTP request pipeline.
@@ -102,6 +87,23 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapGet("/healthz", async (AgriSyncDbContext db) =>
+{
+    var since = IstClock.Now.AddHours(-24);
+    var logs24h = await db.SensorLogs.CountAsync(l => l.TimestampIST >= since);
+    var latest = await db.SensorLogs.MaxAsync(l => (DateTime?)l.TimestampIST);
+    var body = new
+    {
+        zones = await db.Zones.CountAsync(),
+        sensorLogs24h = logs24h,
+        rules = await db.AutomationRules.CountAsync(),
+        alerts = await db.ClimateAlerts.CountAsync(),
+        users = await db.Users.CountAsync(),
+        latestLogIst = latest
+    };
+    return Results.Json(body, statusCode: logs24h == 0 ? 503 : 200);
+}).AllowAnonymous();
 
 app.MapControllerRoute(
     name: "default",

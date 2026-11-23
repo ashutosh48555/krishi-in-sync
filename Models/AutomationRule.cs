@@ -1,3 +1,4 @@
+using AgriSyncIndia.Services;
 using System.ComponentModel.DataAnnotations;
 
 namespace AgriSyncIndia.Models;
@@ -35,5 +36,5 @@ public class AutomationRule
     [StringLength(200)]
     public string? Description { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddHours(5.5);
+    public DateTime CreatedAt { get; set; } = IstClock.Now;
 }

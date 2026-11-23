@@ -1,3 +1,4 @@
+using AgriSyncIndia.Services;
 using AgriSyncIndia.Data;
 using AgriSyncIndia.Models;
 using AgriSyncIndia.ViewModels;
@@ -109,7 +110,7 @@ public class AutomationController : Controller
             Description = string.IsNullOrWhiteSpace(model.NewRule.Description)
                 ? $"IF {model.NewRule.ConditionVariable} {model.NewRule.Operator} {model.NewRule.ThresholdValue} THEN {model.NewRule.ActionTarget}"
                 : model.NewRule.Description,
-            CreatedAt = DateTime.UtcNow.AddHours(5.5)
+            CreatedAt = IstClock.Now
         };
 
         _context.AutomationRules.Add(rule);

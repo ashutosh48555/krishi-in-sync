@@ -1,3 +1,4 @@
+using AgriSyncIndia.Services;
 using System.Security.Claims;
 using AgriSyncIndia.Data;
 using AgriSyncIndia.Models;
@@ -156,7 +157,7 @@ public class AccountController : Controller
             Email = model.Email.Trim().ToLowerInvariant(),
             Role = model.Role,
             AffiliatedFarmCluster = model.AffiliatedFarmCluster ?? "IARI Pusa Smart Farm - New Delhi",
-            CreatedAt = DateTime.UtcNow.AddHours(5.5)
+            CreatedAt = IstClock.Now
         };
 
         newUser.PasswordHash = _passwordHasher.HashPassword(newUser, model.Password);

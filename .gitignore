@@ -17,3 +17,5 @@ App_Data/DataProtection-Keys/
 .vs/
 .idea/
 *.user
+
+tests/**/TestResults/

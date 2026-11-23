@@ -1,3 +1,4 @@
+using AgriSyncIndia.Services;
 using System.ComponentModel.DataAnnotations;
 
 namespace AgriSyncIndia.Models;
@@ -30,5 +31,8 @@ public class User
     [StringLength(150)]
     public string? AffiliatedFarmCluster { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddHours(5.5);
+    [StringLength(100)]
+    public string? ClerkUserId { get; set; }
+
+    public DateTime CreatedAt { get; set; } = IstClock.Now;
 }

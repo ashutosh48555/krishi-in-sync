@@ -1,3 +1,4 @@
+using AgriSyncIndia.Services;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -29,7 +30,7 @@ public class SensorLog
 
     public double WindSpeed { get; set; }
 
-    public DateTime TimestampIST { get; set; } = DateTime.UtcNow.AddHours(5.5);
+    public DateTime TimestampIST { get; set; } = IstClock.Now;
 
     // Navigation property
     public virtual Zone? Zone { get; set; }

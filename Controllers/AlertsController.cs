@@ -1,3 +1,4 @@
+using AgriSyncIndia.Services;
 using AgriSyncIndia.Data;
 using AgriSyncIndia.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -44,7 +45,7 @@ public class AlertsController : Controller
         int warningCount = await _context.ClimateAlerts.CountAsync(a => a.Severity == "Warning" && !a.IsAcknowledged);
         int unackCount = await _context.ClimateAlerts.CountAsync(a => !a.IsAcknowledged);
 
-        var nowIst = DateTime.UtcNow.AddHours(5.5);
+        var nowIst = IstClock.Now;
 
         // Indian Regional Agromet Advisories (ICAR / IMD bulletins)
         var advisories = new List<RegionalCropAdvisory>

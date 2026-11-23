@@ -1,3 +1,4 @@
+using AgriSyncIndia.Services;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -29,7 +30,7 @@ public class ClimateAlert
     [StringLength(250)]
     public string AgronomistRecommendation { get; set; } = string.Empty;
 
-    public DateTime TimestampIST { get; set; } = DateTime.UtcNow.AddHours(5.5);
+    public DateTime TimestampIST { get; set; } = IstClock.Now;
 
     public bool IsAcknowledged { get; set; } = false;
 

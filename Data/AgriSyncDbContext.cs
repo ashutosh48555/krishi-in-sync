@@ -1,9 +1,11 @@
+using AgriSyncIndia.Services;
 using AgriSyncIndia.Models;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace AgriSyncIndia.Data;
 
-public class AgriSyncDbContext : DbContext
+public class AgriSyncDbContext : DbContext, IDataProtectionKeyContext
 {
     public AgriSyncDbContext(DbContextOptions<AgriSyncDbContext> options) : base(options)
     {
@@ -16,6 +18,7 @@ public class AgriSyncDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<ClimateAlert> ClimateAlerts => Set<ClimateAlert>();
     public DbSet<FarmCluster> FarmClusters => Set<FarmCluster>();
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -70,6 +73,7 @@ public class AgriSyncDbContext : DbContext
         {
             entity.HasKey(u => u.UserId);
             entity.HasIndex(u => u.Email).IsUnique();
+            entity.HasIndex(u => u.ClerkUserId).IsUnique();
         });
 
         // ClimateAlert entity mapping
@@ -92,7 +96,7 @@ public class AgriSyncDbContext : DbContext
     /// </summary>
     public async Task<List<SensorLog>> Get24HourZoneLogsAsync(int zoneId)
     {
-        var cutoff = DateTime.UtcNow.AddHours(5.5).AddHours(-24);
+        var cutoff = IstClock.Now.AddHours(-24);
         return await SensorLogs
             .Where(s => s.ZoneId == zoneId && s.TimestampIST >= cutoff)
             .OrderBy(s => s.TimestampIST)

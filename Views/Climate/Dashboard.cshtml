@@ -93,6 +93,16 @@
     </div>
 </div>
 
+<!-- Plain-language summary (rule-based, modelled zones) -->
+<div class="mb-4">
+    <h2 class="h4 fw-bold mb-1">@Model.Headline</h2>
+    <p class="mb-0"><strong>@Model.Advice</strong> <span class="text-muted small">@Model.AdviceReason</span></p>
+    @if (Model.AmbientIsStale)
+    {
+        <p class="text-warning small mb-0">Open-Meteo could not be reached. Ambient values are the last stored reading from @Model.AmbientAsOf.</p>
+    }
+</div>
+
 <!-- SECTION 1: 4 PRIMARY METRIC CARDS (BOOTSTRAP CARDS) -->
 <div class="row g-3 mb-4">
     <!-- Card 1: Ambient / Nursery Temp -->
@@ -101,15 +111,22 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
                     <span class="text-uppercase text-muted fw-bold small">Ambient Temperature</span>
-                    <h2 class="display-6 fw-bold mb-0 text-dark">@Model.PrimaryTemp<small class="fs-5 text-muted">°C</small></h2>
+                    <h2 class="display-6 fw-bold mb-0 text-dark">@(Model.PrimaryTemp?.ToString("0.0") ?? "No reading yet")<small class="fs-5 text-muted">@(Model.PrimaryTemp.HasValue ? "°C" : "")</small></h2>
                 </div>
                 <div class="p-2 bg-danger bg-opacity-10 text-danger rounded-3">
                     <i class="bi bi-thermometer-half fs-3"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center justify-content-between text-muted small pt-2 border-top mt-auto">
-                <span>Target: 24.5°C</span>
-                <span class="text-danger fw-semibold"><i class="bi bi-arrow-up"></i> +1.8°C Offset</span>
+                @if (Model.Polyhouse is { HasReading: true } ph)
+                {
+                    <span>Polyhouse target: @ph.TargetTemp°C</span>
+                    <span class="fw-semibold">@(ph.Delta >= 0 ? "+" : "")@ph.Delta?.ToString("0.0")°C vs target</span>
+                }
+                else
+                {
+                    <span>Polyhouse: No reading yet</span>
+                }
             </div>
         </div>
     </div>
@@ -120,15 +137,22 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
                     <span class="text-uppercase text-muted fw-bold small">Relative Humidity</span>
-                    <h2 class="display-6 fw-bold mb-0 text-dark">@Model.PrimaryHumidity<small class="fs-5 text-muted">%</small></h2>
+                    <h2 class="display-6 fw-bold mb-0 text-dark">@(Model.PrimaryHumidity?.ToString("0.0") ?? "No reading yet")<small class="fs-5 text-muted">@(Model.PrimaryHumidity.HasValue ? "%" : "")</small></h2>
                 </div>
                 <div class="p-2 bg-info bg-opacity-10 text-info rounded-3">
                     <i class="bi bi-moisture fs-3"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center justify-content-between text-muted small pt-2 border-top mt-auto">
-                <span>Polyhouse Target: 75%</span>
-                <span class="text-success fw-semibold"><i class="bi bi-check2"></i> Controlled Range</span>
+                @if (Model.Polyhouse is { HasReading: true } phh)
+                {
+                    <span>Polyhouse target: @phh.TargetHumidity%</span>
+                    <span class="fw-semibold">Polyhouse now: @phh.CurrentHumidity%</span>
+                }
+                else
+                {
+                    <span>Polyhouse: No reading yet</span>
+                }
             </div>
         </div>
     </div>
@@ -142,7 +166,7 @@
                         <span class="text-uppercase text-muted fw-bold small">VPD Deficit</span>
                         <span class="badge @Model.VpdBadgeCssClass" style="font-size: 0.72rem;">@Model.VpdBadgeText</span>
                     </div>
-                    <h2 class="display-6 fw-bold mb-0 text-dark">@Model.PrimaryVPD<small class="fs-5 text-muted"> kPa</small></h2>
+                    <h2 class="display-6 fw-bold mb-0 text-dark">@(Model.PrimaryVPD?.ToString("0.00") ?? "No reading yet")<small class="fs-5 text-muted">@(Model.PrimaryVPD.HasValue ? " kPa" : "")</small></h2>
                 </div>
                 <div class="p-2 bg-success bg-opacity-10 text-success rounded-3">
                     <i class="bi bi-wind fs-3"></i>
@@ -169,8 +193,8 @@
                 </div>
             </div>
             <div class="d-flex align-items-center justify-content-between text-muted small pt-2 border-top mt-auto">
-                <span>Pressure: @Model.SurfacePressure hPa</span>
-                <span>Wind: @Model.AmbientWindSpeed km/h</span>
+                <span>Pressure: @(Model.SurfacePressure?.ToString("0.0") ?? "n/a") hPa</span>
+                <span>Wind: @(Model.AmbientWindSpeed?.ToString("0.0") ?? "n/a") km/h</span>
             </div>
         </div>
     </div>
@@ -189,7 +213,7 @@
             @foreach (var zone in Model.ZoneCards)
             {
                 <div class="col-12">
-                    <div class="card card-agri p-3 border-0 border-start border-4 @(zone.Status == "Optimal" ? "border-success" : (zone.Status == "Caution" ? "border-warning" : "border-danger"))">
+                    <div class="card card-agri p-3 border-0 border-start border-4 @(zone.State == AgriSyncIndia.Services.ZoneStatus.OnTarget ? "border-success" : (zone.State == AgriSyncIndia.Services.ZoneStatus.NoReading ? "border-secondary" : "border-warning"))">
                         <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
                             <div class="d-flex align-items-center gap-2">
                                 <span class="p-2 bg-light rounded-circle text-success"><i class="bi @zone.IconClass fs-5"></i></span>
@@ -199,17 +223,23 @@
                                 </div>
                             </div>
                             <div>
-                                <span class="badge @(zone.Status == "Optimal" ? "bg-success" : (zone.Status == "Caution" ? "bg-warning text-dark" : "bg-danger")) px-2 py-1">
+                                <span class="badge @(zone.State == AgriSyncIndia.Services.ZoneStatus.OnTarget ? "bg-success" : (zone.State == AgriSyncIndia.Services.ZoneStatus.NoReading ? "bg-secondary" : "bg-warning text-dark")) px-2 py-1">
                                     @zone.Status
                                 </span>
                             </div>
                         </div>
 
+                        @if (!zone.HasReading)
+                        {
+                            <div class="py-2 border-top border-bottom my-2 text-muted">No reading yet. Use Sync Telemetry to refresh.</div>
+                        }
+                        else
+                        {
                         <div class="row g-2 py-2 border-top border-bottom text-center my-2 bg-light bg-opacity-50 rounded">
                             <div class="col-3 border-end">
                                 <div class="text-muted small">Current Temp</div>
                                 <div class="fw-bold text-dark fs-6">@zone.CurrentTemp°C</div>
-                                <div class="text-muted" style="font-size: 0.72rem;">Target: @zone.TargetTemp°C</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Target: @zone.TargetTemp°C (@(zone.Delta >= 0 ? "+" : "")@zone.Delta?.ToString("0.0")°C)</div>
                             </div>
                             <div class="col-3 border-end">
                                 <div class="text-muted small">Humidity</div>
@@ -219,7 +249,7 @@
                             <div class="col-3 border-end">
                                 <div class="text-muted small">VPD Deficit</div>
                                 <div class="fw-bold text-dark fs-6">@zone.CurrentVPD <small class="text-muted">kPa</small></div>
-                                <div class="text-success" style="font-size: 0.72rem;">Optimal Range</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">@zone.VpdBandText</div>
                             </div>
                             <div class="col-3">
                                 <div class="text-muted small">Soil Moisture</div>
@@ -227,6 +257,7 @@
                                 <div class="text-muted" style="font-size: 0.72rem;">Root Zone VWC</div>
                             </div>
                         </div>
+                        }
 
                         <div class="text-muted small mt-1">
                             <i class="bi bi-info-circle me-1"></i> @zone.Description

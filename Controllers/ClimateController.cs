@@ -35,7 +35,7 @@ public class ClimateController : Controller
     [Route("~/")]
     public async Task<IActionResult> Dashboard(string? farm, string? cropPreset, string? lang)
     {
-        var nowIst = DateTime.UtcNow.AddHours(5.5);
+        var nowIst = IstClock.Now;
         string currentLang = lang?.ToLowerInvariant() switch
         {
             "hi" => "hi",
@@ -54,21 +54,25 @@ public class ClimateController : Controller
             return View(new DashboardViewModel());
         }
 
-        // Get recent logs for each zone
-        var recentLogs = await _context.SensorLogs
-            .OrderByDescending(s => s.TimestampIST)
-            .Take(zones.Count * 2)
-            .ToListAsync();
+        // Latest log per zone; older than NoReadingAfterHours counts as no reading.
+        var freshCutoff = nowIst.AddHours(-ClimateRules.NoReadingAfterHours);
+        var latestByZone = new Dictionary<int, SensorLog>();
+        foreach (var z in zones)
+        {
+            var latest = await _context.SensorLogs
+                .Where(l => l.ZoneId == z.ZoneId)
+                .OrderByDescending(l => l.TimestampIST)
+                .FirstOrDefaultAsync();
+            if (latest != null && latest.TimestampIST >= freshCutoff)
+                latestByZone[z.ZoneId] = latest;
+        }
 
-        var polyhouseLog = recentLogs.FirstOrDefault(l => l.ZoneId == 1) ?? new SensorLog { Temperature = 26.8, Humidity = 76.5, VPD = 0.92, SoilMoisture = 62.0 };
-        var openFieldLog = recentLogs.FirstOrDefault(l => l.ZoneId == 2) ?? new SensorLog { Temperature = 24.2, Humidity = 68.0, VPD = 1.05, SoilMoisture = 42.0 };
-        var dripSectorLog = recentLogs.FirstOrDefault(l => l.ZoneId == 3) ?? new SensorLog { Temperature = 23.0, Humidity = 72.0, VPD = 0.88, SoilMoisture = 68.0 };
-
-        // Top 4 Metric Cards based on Polyhouse / Ambient
-        double primaryTemp = polyhouseLog.Temperature;
-        double primaryHumidity = polyhouseLog.Humidity;
-        double primaryVpd = polyhouseLog.VPD;
-        var (vpdBadgeText, vpdBadgeClass, vpdDesc) = _weatherService.GetVpdStatus(primaryVpd);
+        // Ambient cards: live Open-Meteo, or last stored reading when unreachable
+        var ambient = await _weatherService.GetAmbientAsync();
+        double? ambientVpd = ambient == null ? null : Math.Round(ClimateRules.Vpd(ambient.Temp, ambient.Humidity), 2);
+        var (vpdBadgeText, vpdBadgeClass, vpdDesc) = ambientVpd == null
+            ? ("No reading yet", "bg-secondary", string.Empty)
+            : _weatherService.GetVpdStatus(ambientVpd.Value);
 
         // Actuators
         var actuators = await _context.Actuators
@@ -119,30 +123,42 @@ public class ClimateController : Controller
         var zoneCards = new List<ZoneCardViewModel>();
         foreach (var z in zones)
         {
-            var log = recentLogs.FirstOrDefault(l => l.ZoneId == z.ZoneId) ?? new SensorLog
-            {
-                Temperature = z.TargetTemp,
-                Humidity = z.TargetHumidity,
-                VPD = 0.95,
-                SoilMoisture = 50.0
-            };
+            latestByZone.TryGetValue(z.ZoneId, out var log);
+            var state = ClimateRules.Status(log?.Temperature, log?.Humidity, z.TargetTemp, z.TargetHumidity);
+            double? delta = log == null ? null : Math.Round(log.Temperature - z.TargetTemp, 1);
+            var vpdText = log == null ? string.Empty : _weatherService.GetVpdStatus(log.VPD).BadgeText;
 
             zoneCards.Add(new ZoneCardViewModel
             {
                 ZoneId = z.ZoneId,
                 Name = z.Name,
                 CropType = z.CropType,
-                Status = z.Status,
+                Status = state switch
+                {
+                    ZoneStatus.OnTarget => "Optimal",
+                    ZoneStatus.NoReading => "No reading yet",
+                    _ => "Caution"
+                },
+                State = state,
+                HasReading = log != null,
+                Delta = delta,
+                VpdBand = log == null ? null : ClimateRules.Band(log.VPD),
+                VpdBandText = vpdText,
                 IconClass = z.IconClass,
-                CurrentTemp = log.Temperature,
+                CurrentTemp = log?.Temperature ?? 0,
                 TargetTemp = z.TargetTemp,
-                CurrentHumidity = log.Humidity,
+                CurrentHumidity = log?.Humidity ?? 0,
                 TargetHumidity = z.TargetHumidity,
-                CurrentVPD = log.VPD,
-                CurrentSoilMoisture = log.SoilMoisture,
+                CurrentVPD = log?.VPD ?? 0,
+                CurrentSoilMoisture = log?.SoilMoisture ?? 0,
                 Description = z.Description
             });
         }
+
+        var zoneStates = zoneCards.Select(c => new ZoneState(c.Name, c.State, c.Delta ?? 0)).ToList();
+        var polyCard = zoneCards.FirstOrDefault(c => c.Name.Contains("Polyhouse", StringComparison.OrdinalIgnoreCase));
+        var advice = ClimateRules.Advice(currentLang, polyCard?.State ?? ZoneStatus.NoReading,
+            polyCard?.Delta ?? 0, polyCard?.TargetTemp ?? 0);
 
         int activeAlertsCount = await _context.ClimateAlerts.CountAsync(a => !a.IsAcknowledged);
 
@@ -163,12 +179,18 @@ public class ClimateController : Controller
         double farmLon = selectedCluster?.Longitude ?? 77.2090;
         string farmRegion = selectedCluster?.Region ?? "Indo-Gangetic Basin";
 
-        // Multilingual banner text
+        // Multilingual banner text (ambient values come from Open-Meteo or the stored fallback)
+        string tempText = ambient == null ? "—" : ambient.Temp.ToString("0.0", CultureInfo.InvariantCulture);
+        string rhText = ambient == null ? "—" : ambient.Humidity.ToString("0.0", CultureInfo.InvariantCulture);
+        string windText = ambient == null ? "—" : ambient.WindSpeed.ToString("0.0", CultureInfo.InvariantCulture);
+        string pressureHi = ambient?.Pressure is double p ? $" | दबाव: {p:0} hPa" : "";
+        string asOf = ambient == null ? "" : ambient.TimestampIst.ToString("dd MMM, HH:mm") + " IST";
+        string staleNote = ambient is { IsStale: true } ? $" | Open-Meteo unreachable, last stored reading from {asOf}" : "";
         string weatherBanner = currentLang switch
         {
-            "hi" => $"लाइव मौसम प्रसारण: {selectedFarmName} ({farmRegion} - {farmLat:F2}°N, {farmLon:F2}°E) | तापमान: {openFieldLog.Temperature}°C, आर्द्रता: {openFieldLog.Humidity}%, दबाव: 991 hPa | IST समय: {nowIst:dd MMM yyyy, HH:mm:ss} IST",
-            "pa" => $"ਲਾਈਵ ਮੌਸਮ ਟੈਲੀਮੈਟਰੀ: {selectedFarmName} ({farmRegion} - {farmLat:F2}°N, {farmLon:F2}°E) | ਤਾਪਮਾਨ: {openFieldLog.Temperature}°C, ਨਮੀ: {openFieldLog.Humidity}% | IST: {nowIst:dd MMM yyyy, HH:mm:ss} IST",
-            _ => $"Live Agromet Telemetry: {selectedFarmName} ({farmRegion} - {farmLat:F2}°N, {farmLon:F2}°E) | Ambient: {openFieldLog.Temperature}°C | RH: {openFieldLog.Humidity}% | Wind: 4.8 km/h | IST: {nowIst:dd MMM yyyy, HH:mm:ss} IST"
+            "hi" => $"लाइव मौसम प्रसारण: {selectedFarmName} ({farmRegion} - {farmLat:F2}°N, {farmLon:F2}°E) | तापमान: {tempText}°C, आर्द्रता: {rhText}%{pressureHi} | IST समय: {nowIst:dd MMM yyyy, HH:mm:ss} IST{staleNote}",
+            "pa" => $"ਲਾਈਵ ਮੌਸਮ ਟੈਲੀਮੈਟਰੀ: {selectedFarmName} ({farmRegion} - {farmLat:F2}°N, {farmLon:F2}°E) | ਤਾਪਮਾਨ: {tempText}°C, ਨਮੀ: {rhText}% | IST: {nowIst:dd MMM yyyy, HH:mm:ss} IST{staleNote}",
+            _ => $"Live Agromet Telemetry: {selectedFarmName} ({farmRegion} - {farmLat:F2}°N, {farmLon:F2}°E) | Ambient: {tempText}°C | RH: {rhText}% | Wind: {windText} km/h | IST: {nowIst:dd MMM yyyy, HH:mm:ss} IST{staleNote}"
         };
 
         var viewModel = new DashboardViewModel
@@ -179,17 +201,22 @@ public class ClimateController : Controller
             CurrentLanguage = currentLang,
             LiveIstTimestamp = nowIst.ToString("dd MMM yyyy | HH:mm:ss") + " IST",
             WeatherBannerText = weatherBanner,
-            AmbientTemp = openFieldLog.Temperature,
-            AmbientHumidity = openFieldLog.Humidity,
-            AmbientWindSpeed = openFieldLog.WindSpeed > 0 ? openFieldLog.WindSpeed : 4.8,
-            SurfacePressure = 991.2,
-            PrimaryTemp = primaryTemp,
-            PrimaryHumidity = primaryHumidity,
-            PrimaryVPD = primaryVpd,
+            AmbientTemp = ambient?.Temp,
+            AmbientHumidity = ambient?.Humidity,
+            AmbientWindSpeed = ambient?.WindSpeed,
+            SurfacePressure = ambient?.Pressure,
+            AmbientIsStale = ambient?.IsStale ?? false,
+            AmbientAsOf = asOf,
+            Headline = ClimateRules.Headline(currentLang, zoneStates),
+            Advice = advice.Text,
+            AdviceReason = advice.Reason,
+            PrimaryTemp = ambient?.Temp,
+            PrimaryHumidity = ambient?.Humidity,
+            PrimaryVPD = ambientVpd,
             VpdBadgeText = vpdBadgeText,
             VpdBadgeCssClass = vpdBadgeClass,
             VpdDescription = vpdDesc,
-            SolarRadiation = polyhouseLog.SolarRadiation > 0 ? polyhouseLog.SolarRadiation : 480.0,
+            SolarRadiation = latestByZone.Values.FirstOrDefault(l => l.ZoneId == polyCard?.ZoneId)?.SolarRadiation ?? 0,
             ZoneCards = zoneCards,
             Actuators = actuators,
             ChartData = chartData,
@@ -225,12 +252,15 @@ public class ClimateController : Controller
         try
         {
             var logs = await _weatherService.IngestAndSyncTelemetryAsync();
-            TempData["SuccessMessage"] = $"Telemetry updated directly from Open-Meteo REST API for {logs.Count} zones.";
+            if (logs.Count > 0)
+                TempData["SuccessMessage"] = $"Readings refreshed from Open-Meteo for {logs.Count} zones.";
+            else
+                TempData["ErrorMessage"] = "Could not reach Open-Meteo. Showing the last stored readings. Try again in a minute.";
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error refreshing telemetry");
-            TempData["ErrorMessage"] = "Could not reach Open-Meteo API. Resilient simulated baseline was applied.";
+            TempData["ErrorMessage"] = "Could not refresh readings. Showing the last stored readings. Try again in a minute.";
         }
 
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -284,7 +314,7 @@ public class ClimateController : Controller
             });
         }
 
-        var nowIst = DateTime.UtcNow.AddHours(5.5);
+        var nowIst = IstClock.Now;
         var nodes = new List<SensorNodeHealth>
         {
             new SensorNodeHealth
@@ -367,7 +397,7 @@ public class ClimateController : Controller
     [HttpGet("Analytics")]
     public async Task<IActionResult> Analytics(DateTime? startDate, DateTime? endDate, int? zoneId)
     {
-        var nowIst = DateTime.UtcNow.AddHours(5.5);
+        var nowIst = IstClock.Now;
         var sDate = startDate ?? nowIst.AddDays(-2);
         var eDate = endDate ?? nowIst;
 
@@ -427,7 +457,7 @@ public class ClimateController : Controller
     [HttpGet("ExportCsv")]
     public async Task<IActionResult> ExportCsv(DateTime? startDate, DateTime? endDate, int? zoneId)
     {
-        var nowIst = DateTime.UtcNow.AddHours(5.5);
+        var nowIst = IstClock.Now;
         var sDate = startDate ?? nowIst.AddDays(-7);
         var eDate = endDate ?? nowIst;
 

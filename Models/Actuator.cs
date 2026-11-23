@@ -1,3 +1,4 @@
+using AgriSyncIndia.Services;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -25,7 +26,7 @@ public class Actuator
     [StringLength(20)]
     public string CurrentStatus { get; set; } = "OFF"; // "ON" or "OFF"
 
-    public DateTime LastTriggered { get; set; } = DateTime.UtcNow.AddHours(5.5);
+    public DateTime LastTriggered { get; set; } = IstClock.Now;
 
     [StringLength(50)]
     public string DeviceType { get; set; } = "Ventilation"; // Ventilation, Misting, Irrigation

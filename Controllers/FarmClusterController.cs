@@ -1,3 +1,4 @@
+using AgriSyncIndia.Services;
 using AgriSyncIndia.Data;
 using AgriSyncIndia.Models;
 using AgriSyncIndia.ViewModels;
@@ -79,7 +80,7 @@ public class FarmClusterController : Controller
                 ? $"Smart agricultural research block in {model.Region} cultivating {model.PrimaryCrops}."
                 : model.Description.Trim(),
             Status = "Active",
-            CreatedAt = DateTime.UtcNow.AddHours(5.5)
+            CreatedAt = IstClock.Now
         };
 
         _context.FarmClusters.Add(cluster);

@@ -1,3 +1,4 @@
+using AgriSyncIndia.Services;
 using System.ComponentModel.DataAnnotations;
 using AgriSyncIndia.Models;
 
@@ -7,11 +8,11 @@ public class AnalyticsViewModel
 {
     [Display(Name = "Start Date")]
     [DataType(DataType.Date)]
-    public DateTime StartDate { get; set; } = DateTime.UtcNow.AddHours(5.5).AddDays(-1);
+    public DateTime StartDate { get; set; } = IstClock.Now.AddDays(-1);
 
     [Display(Name = "End Date")]
     [DataType(DataType.Date)]
-    public DateTime EndDate { get; set; } = DateTime.UtcNow.AddHours(5.5);
+    public DateTime EndDate { get; set; } = IstClock.Now;
 
     [Display(Name = "Agricultural Zone")]
     public int? SelectedZoneId { get; set; }

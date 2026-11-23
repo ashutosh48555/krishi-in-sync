@@ -1,4 +1,5 @@
 using AgriSyncIndia.Models;
+using AgriSyncIndia.Services;
 
 namespace AgriSyncIndia.ViewModels;
 
@@ -26,15 +27,26 @@ public class DashboardViewModel
     public string CurrentLanguage { get; set; } = "en"; // en, hi, pa
     public string LiveIstTimestamp { get; set; } = string.Empty;
     public string WeatherBannerText { get; set; } = string.Empty;
-    public double AmbientTemp { get; set; }
-    public double AmbientHumidity { get; set; }
-    public double AmbientWindSpeed { get; set; }
-    public double SurfacePressure { get; set; }
+    public double? AmbientTemp { get; set; }
+    public double? AmbientHumidity { get; set; }
+    public double? AmbientWindSpeed { get; set; }
+    public double? SurfacePressure { get; set; }
 
-    // 4 Primary Metric Cards
-    public double PrimaryTemp { get; set; }
-    public double PrimaryHumidity { get; set; }
-    public double PrimaryVPD { get; set; }
+    /// <summary>True when Open-Meteo was unreachable and the last stored reading is shown.</summary>
+    public bool AmbientIsStale { get; set; }
+    public string AmbientAsOf { get; set; } = string.Empty;
+
+    // Plain-language summary built from zone statuses (ClimateRules)
+    public string Headline { get; set; } = string.Empty;
+    public string Advice { get; set; } = string.Empty;
+    public string AdviceReason { get; set; } = string.Empty;
+
+    // 4 Primary Metric Cards (ambient, from Open-Meteo)
+    public double? PrimaryTemp { get; set; }
+    public double? PrimaryHumidity { get; set; }
+    public double? PrimaryVPD { get; set; }
+    public ZoneCardViewModel? Polyhouse => ZoneCards.FirstOrDefault(z =>
+        z.Name.Contains("Polyhouse", StringComparison.OrdinalIgnoreCase));
     public string VpdBadgeText { get; set; } = "Optimal Transpiration";
     public string VpdBadgeCssClass { get; set; } = "bg-success";
     public string VpdDescription { get; set; } = string.Empty;
@@ -58,7 +70,12 @@ public class ZoneCardViewModel
     public int ZoneId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string CropType { get; set; } = string.Empty;
-    public string Status { get; set; } = "Optimal";
+    public string Status { get; set; } = "Optimal"; // Optimal, Caution, NoReading (display only)
+    public ZoneStatus State { get; set; } = ZoneStatus.NoReading;
+    public bool HasReading { get; set; }
+    public double? Delta { get; set; }              // CurrentTemp - TargetTemp
+    public VpdBand? VpdBand { get; set; }
+    public string VpdBandText { get; set; } = string.Empty;
     public string IconClass { get; set; } = "bi-flower1";
     public double CurrentTemp { get; set; }
     public double TargetTemp { get; set; }

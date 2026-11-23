@@ -33,45 +33,64 @@ public class OpenMeteoService : IOpenMeteoService
                      "&hourly=temperature_2m,relative_humidity_2m" +
                      "&timezone=Asia%2FKolkata";
 
-        try
+        // 5 s per attempt, one retry. Returns null when both attempts fail; never throws.
+        for (int attempt = 1; attempt <= 2; attempt++)
         {
-            var response = await client.GetAsync(url);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var json = await response.Content.ReadAsStringAsync();
-                var data = JsonSerializer.Deserialize<OpenMeteoResponse>(json);
-                return data;
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                var response = await client.GetAsync(url, cts.Token);
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync(cts.Token);
+                    var data = JsonSerializer.Deserialize<OpenMeteoResponse>(json);
+                    if (data?.Current != null) return data;
+                }
+                else
+                {
+                    _logger.LogWarning("Open-Meteo returned {StatusCode} (attempt {Attempt})", response.StatusCode, attempt);
+                }
             }
-            _logger.LogWarning("Open-Meteo API returned non-success code: {StatusCode}", response.StatusCode);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to fetch live weather from Open-Meteo API. Applying resilient fallback.");
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Open-Meteo request failed (attempt {Attempt})", attempt);
+            }
         }
 
-        // Return simulated baseline if network call fails
-        return GenerateResilientFallback();
+        return null;
+    }
+
+    /// <summary>
+    /// Ambient reading for the dashboard: live Open-Meteo when reachable, else the newest stored
+    /// Open Field log flagged as stale. Null only when neither exists. Never throws.
+    /// </summary>
+    public async Task<AmbientReading?> GetAmbientAsync()
+    {
+        var live = (await FetchLiveWeatherAsync())?.Current;
+        if (live != null)
+            return new AmbientReading(live.Temperature2m, live.RelativeHumidity2m, live.WindSpeed10m,
+                live.SurfacePressure, IstClock.Now, false);
+
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AgriSyncDbContext>();
+        var last = await context.SensorLogs
+            .Where(l => l.Zone!.Name == "Open Field")
+            .OrderByDescending(l => l.TimestampIST)
+            .FirstOrDefaultAsync();
+        return last == null ? null
+            : new AmbientReading(last.Temperature, last.Humidity, last.WindSpeed, null, last.TimestampIST, true);
     }
 
     /// <summary>
     /// Computes Vapor Pressure Deficit (VPD in kPa) using C# math functions:
-    /// VP_sat = 0.61078 * exp((17.27 * T) / (T + 237.3))
-    /// VP_act = VP_sat * (RH / 100)
-    /// VPD = VP_sat - VP_act
+    /// Delegates to ClimateRules.Vpd (single formula), rounded to 2 decimals.
     /// </summary>
     public double CalculateVPD(double temperatureC, double relativeHumidityPercent)
     {
         if (temperatureC < -50 || temperatureC > 60 || relativeHumidityPercent <= 0)
             return 0.85;
 
-        // Saturated Vapor Pressure in kPa
-        double vpSat = 0.61078 * Math.Exp((17.27 * temperatureC) / (temperatureC + 237.3));
-
-        // Actual Vapor Pressure in kPa
-        double vpAct = vpSat * (relativeHumidityPercent / 100.0);
-
-        // Vapor Pressure Deficit (VPD)
-        double vpd = vpSat - vpAct;
+        double vpd = ClimateRules.Vpd(temperatureC, relativeHumidityPercent);
 
         return Math.Round(Math.Max(0.01, vpd), 2);
     }
@@ -101,9 +120,11 @@ public class OpenMeteoService : IOpenMeteoService
         var context = scope.ServiceProvider.GetRequiredService<AgriSyncDbContext>();
 
         var weatherData = await FetchLiveWeatherAsync();
-        var current = weatherData?.Current ?? GenerateResilientFallback().Current!;
+        var current = weatherData?.Current;
+        if (current == null)
+            return new List<SensorLog>(); // no live data: append nothing rather than invent readings
 
-        var nowIst = DateTime.UtcNow.AddHours(5.5);
+        var nowIst = IstClock.Now;
         var createdLogs = new List<SensorLog>();
 
         var zones = await context.Zones.ToListAsync();
@@ -195,7 +216,7 @@ public class OpenMeteoService : IOpenMeteoService
 
         var rules = await context.AutomationRules.Where(r => r.IsActive).ToListAsync();
         var actuators = await context.Actuators.Include(a => a.Zone).ToListAsync();
-        var nowIst = DateTime.UtcNow.AddHours(5.5);
+        var nowIst = IstClock.Now;
 
         foreach (var rule in rules)
         {
@@ -281,59 +302,8 @@ public class OpenMeteoService : IOpenMeteoService
         if (actuator != null)
         {
             actuator.CurrentStatus = actuator.CurrentStatus == "ON" ? "OFF" : "ON";
-            actuator.LastTriggered = DateTime.UtcNow.AddHours(5.5);
+            actuator.LastTriggered = IstClock.Now;
             await context.SaveChangesAsync();
         }
-    }
-
-    private OpenMeteoResponse GenerateResilientFallback()
-    {
-        var nowIst = DateTime.UtcNow.AddHours(5.5);
-        int hour = nowIst.Hour;
-
-        // Realistic Indian Diurnal Curve (cooler night 18-20°C, warmer afternoon 28-32°C)
-        double diurnalFactor = Math.Sin((hour - 8) * Math.PI / 12.0);
-        double temp = Math.Round(24.0 + (diurnalFactor * 6.5), 1);
-        double rh = Math.Round(72.0 - (diurnalFactor * 22.0), 1);
-
-        var hourlyTimes = new List<string>();
-        var hourlyTemps = new List<double>();
-        var hourlyRhs = new List<double>();
-
-        for (int i = 23; i >= 0; i--)
-        {
-            var hTime = nowIst.AddHours(-i);
-            int hHour = hTime.Hour;
-            double hFactor = Math.Sin((hHour - 8) * Math.PI / 12.0);
-            double hTemp = Math.Round(24.0 + (hFactor * 6.5), 1);
-            double hRh = Math.Round(72.0 - (hFactor * 22.0), 1);
-
-            hourlyTimes.Add(hTime.ToString("yyyy-MM-ddTHH:00"));
-            hourlyTemps.Add(hTemp);
-            hourlyRhs.Add(hRh);
-        }
-
-        return new OpenMeteoResponse
-        {
-            Latitude = 28.6139,
-            Longitude = 77.2090,
-            Timezone = "Asia/Kolkata",
-            Current = new OpenMeteoCurrent
-            {
-                Time = nowIst.ToString("yyyy-MM-ddTHH:mm"),
-                Temperature2m = temp,
-                RelativeHumidity2m = rh,
-                SurfacePressure = 992.4,
-                WindSpeed10m = 5.2,
-                SoilTemperature0cm = Math.Round(temp - 2.0, 1),
-                SoilMoisture0To1cm = 0.34
-            },
-            Hourly = new OpenMeteoHourly
-            {
-                Time = hourlyTimes,
-                Temperature2m = hourlyTemps,
-                RelativeHumidity2m = hourlyRhs
-            }
-        };
     }
 }
