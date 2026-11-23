@@ -48,3 +48,18 @@
 - `grep -rnE "cdn\.|googleapis|jsdelivr" Views wwwroot` (outside wwwroot/lib, wwwroot/dev) -> no output.
 - Removed: Bootstrap CSS and JS, Bootstrap Icons, Google Fonts, jQuery from the layout (jQuery plus validation load only through `_ValidationScriptsPartial`, used by FarmCluster/Create), old inline styles/scripts, IST clock, tricolor stripe, tech badges, `_Layout.cshtml.css`. Views not yet restyled (Alerts, Automation, Analytics, Topology, FarmCluster) still use Bootstrap class names and look unstyled until Phase 3c.
 - Not verified: Clerk script CSP needs (style-src may need more when Clerk renders UI), real touch device, Safari/Firefox, Lighthouse, Hindi/Punjabi on every width (320/390 overflow checked in English only plus the Hindi home headline).
+
+## Phase 3c: remaining pages (History, Zones, Alerts, Automation, Clusters, Account)
+- Built across parallel branches `worktree-agent-aee27fc28c81a3ecf` (3c-A: History, Zones, Alerts) and `worktree-agent-aebd301a8d281be7f` (3c-B: Automation, Clusters, Account status pages).
+- All views rebuilt using the Phase 3 design system: tokens only, Bento grid, hairline tables, inline Lucide SVG icons (`_Icon.cshtml`), full localization across `en`, `hi`, `pa` via `Localizer.T`, and zero CDN dependencies.
+- **History (`/Climate/Analytics`):** 24h and 7d hourly averaged readings, 3 summary stat cards (Lowest, Average, Highest) for Temp, Humidity, and VPD with optimal band (0.8–1.25 kPa), shared x-axis Chart.js charts, and streaming CSV export (`ExportCsv`).
+- **Zones (`/Climate/Topology`):** individual zone bento cards with VPD tracks, live readings vs targets, actuator list with auto/manual indicators, and full devices table. Actuator toggling restricted to Farm Manager and Agronomist.
+- **Alerts (`/Alerts`):** filtered navigation (All, Critical, Warning, Resolved) with counts, severity-tinted cards,IST timestamps, and one-click acknowledgement form for authorized operators.
+- **Automation (`/Automation`):** root-zone soil telemetry card (VWC and Root Temperature) with no-reading fallback, IF-THEN rules list with plain-language translated sentences (`RuleDisplay.Sentence`), active/paused toggle, owner attribution, and "Add Rule" form with metric, operator, threshold, actuator selector, and note. Viewer accounts can add rules and delete only their own rules (evaluator path verified).
+- **Clusters (`/FarmCluster` & `/FarmCluster/Create`):** registered farm clusters table with acres, coordinates, crop focus, and direct "Open Dashboard" button. Add cluster form with coordinate range validation, duplicate name prevention, and regional presets (Delhi, Ludhiana, Karnal, Nagpur, Anand).
+- **Account status pages (`/Account/AccessDenied`, `/Account/NotFound`):** styled 403 Forbidden and 404 Not Found pages with design tokens and dashboard navigation.
+- **Test coverage:** 111 of 111 tests passing (`dotnet test tests/AgriSyncIndia.Tests` -> `Passed! - Failed: 0, Passed: 111`).
+  - 23 tests in `Pages3cATests.cs` (History, Zones, Alerts, CSV export, role authorization).
+  - 17 tests in `Automation3cBTests.cs` (Rule validation, sentences, ownership, evaluator path, cluster creation).
+- **Compilation:** `dotnet build -warnaserror` clean with 0 Warnings and 0 Errors.
+- **Neon Realtime integration:** live zone telemetry, graceful fallback when URLs are unconfigured, and updated strict Content Security Policy allowing wss/https connect-src.
