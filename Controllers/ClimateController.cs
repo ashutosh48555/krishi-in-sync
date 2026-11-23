@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using System.Globalization;
 using System.Text;
 using AgriSyncIndia.Data;
@@ -230,9 +231,11 @@ public class ClimateController : Controller
     /// Actuator manual toggle action.
     /// </summary>
     [HttpPost("ToggleActuator")]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleActuator(int actuatorId, string? returnUrl)
     {
+        if (!await _context.Actuators.AnyAsync(a => a.ActuatorId == actuatorId)) return NotFound();
         await _weatherService.ToggleActuatorAsync(actuatorId);
         TempData["SuccessMessage"] = $"Actuator #{actuatorId} status successfully toggled.";
 
@@ -246,6 +249,7 @@ public class ClimateController : Controller
     /// Ingests live telemetry from Open-Meteo REST API.
     /// </summary>
     [HttpPost("RefreshTelemetry")]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RefreshTelemetry(string? returnUrl)
     {

@@ -1,7 +1,10 @@
 using AgriSyncIndia.Data;
 using AgriSyncIndia.Services;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +22,32 @@ builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.C
         options.SlidingExpiration = true;
         options.Cookie.Name = "AgriSyncAuthCookie";
         options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // Secure whenever the (forwarded) request is https
+        options.Cookie.SameSite = SameSiteMode.Lax;
     });
+
+// Clerk (optional). Values come from env vars / user-secrets; nothing is stored in appsettings.json.
+builder.Services.Configure<ClerkOptions>(builder.Configuration.GetSection("Clerk"));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<ClerkOptions>>().Value);
+builder.Services.AddSingleton<IClerkKeyProvider, ClerkJwksKeyProvider>();
+builder.Services.AddSingleton<ClerkTokenValidator>();
+builder.Services.AddHttpClient<UserProvisioning>(c => c.Timeout = TimeSpan.FromSeconds(8));
+
+builder.Services.Configure<ForwardedHeadersOptions>(o =>
+{
+    o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    // Render's proxy address is not fixed; the app is only reachable through it.
+    o.KnownIPNetworks.Clear();
+    o.KnownProxies.Clear();
+});
+
+builder.Services.AddRateLimiter(o =>
+{
+    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    o.AddPolicy("auth", ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
+});
 
 // Register HttpClient for Open-Meteo REST API ingestion
 builder.Services.AddHttpClient("OpenMeteoClient", client =>
@@ -75,6 +103,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Climate/Dashboard");
@@ -82,9 +111,23 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+var clerkOrigin = app.Services.GetRequiredService<ClerkOptions>().Issuer;
+var csp = SecurityHeaders.ContentSecurityPolicy(clerkOrigin);
+app.Use(async (ctx, next) =>
+{
+    var h = ctx.Response.Headers;
+    h["Content-Security-Policy"] = csp;
+    h["X-Content-Type-Options"] = "nosniff";
+    h["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    h["X-Frame-Options"] = "DENY";
+    await next();
+});
+
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

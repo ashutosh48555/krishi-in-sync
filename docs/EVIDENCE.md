@@ -9,3 +9,17 @@
 - `dotnet tool run dotnet-ef migrations list` (no database) -> `20261123101520_InitialCreate`. `migrations script` contains `ENABLE ROW LEVEL SECURITY` for 9 tables.
 - Dashboard (`/`) headline rendered from live data: "Polyhouse Nursery is 9.0 °C above target. Open Field is 4.3 °C above target. Drip Sector is 7.1 °C above target."; advice "Open the polyhouse vents and run the fan until evening."
 - Not verified (no Postgres here): `Migrate()` on a real database, RLS via anon REST read, the 503 path of `/healthz`, Open-Meteo failure path under a real outage.
+
+## Phase 2
+- `dotnet build -warnaserror` -> `0 Warning(s) 0 Error(s)`. `dotnet test tests/AgriSyncIndia.Tests` -> `Passed! - Failed: 0, Passed: 53` (20 new: validator 9, provisioning 7, authorization reflection 4).
+- Run on SQLite, no Clerk config: `GET /Account/Login` -> `200`, demo credentials present, "Continue with Clerk" count `0`.
+- Demo login (cookie jar + antiforgery token, dr.sharma@agrisync.in): `302 -> /Climate/Dashboard`; then `GET /FarmCluster/Create` -> `200`.
+- Anonymous `GET /FarmCluster/Create` -> `302 -> /Account/Login?ReturnUrl=%2FFarmCluster%2FCreate`.
+- Anonymous `POST /Automation/DeleteRule` -> `HTTP/1.1 302 Found`, `Location: .../Account/Login?ReturnUrl=%2FAutomation%2FDeleteRule` (not executed).
+- Authenticated `POST /Automation/DeleteRule ruleId=99999` with antiforgery -> `404`. Authenticated POST without antiforgery -> `400`.
+- `/Account/Register` -> `404`; `/Account/ClerkCallback` without Clerk config -> `404`. Logout POST -> `302 -> /Account/Login`.
+- Header present: `Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; ...` (no Clerk origin when unconfigured).
+- With fake `Clerk__FrontendApi=https://demo.clerk.accounts.dev`, `PublishableKey=pk_test_FAKE`: Login shows "Continue with Clerk" then "or use the demo account"; CSP `script-src` gains `https://demo.clerk.accounts.dev`; callback page renders Clerk script tags and `/js/clerk-callback.js`; `POST /Account/ClerkSession` with a junk token -> `401 {"error":"Could not load Clerk signing keys."}`; without antiforgery -> `400`.
+- `git grep -nI "sk_\|clerk.*secret"` -> only AUTH.md and PLAN.md prose (key names, `sk_...` placeholder). No values in files.
+- NOT verified (needs real Clerk keys): the live sign-in, `Clerk.redirectToSignIn` option names, real token `iss`/`azp` values, JWKS fetch over the network, Clerk script CSP needs (telemetry, img hosts), `Clerk.signOut` redirect, Backend API email fallback.
+- Known gap: CSP still allows `'unsafe-inline'`, jsDelivr and Google Fonts because the current layout depends on them; Phase 3 removes them.

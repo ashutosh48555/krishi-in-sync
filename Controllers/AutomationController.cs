@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using AgriSyncIndia.Services;
 using AgriSyncIndia.Data;
 using AgriSyncIndia.Models;
@@ -88,6 +89,7 @@ public class AutomationController : Controller
     /// Uses ASP.NET Core Model Binding and Server-side Validation.
     /// </summary>
     [HttpPost("CreateRule")]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateRule(AutomationViewModel model)
     {
@@ -124,16 +126,15 @@ public class AutomationController : Controller
     /// Toggle rule activation status.
     /// </summary>
     [HttpPost("ToggleRule")]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleRule(int ruleId)
     {
         var rule = await _context.AutomationRules.FindAsync(ruleId);
-        if (rule != null)
-        {
-            rule.IsActive = !rule.IsActive;
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Rule #{rule.RuleId} is now {(rule.IsActive ? "ACTIVE" : "DISABLED")}.";
-        }
+        if (rule == null) return NotFound();
+        rule.IsActive = !rule.IsActive;
+        await _context.SaveChangesAsync();
+        TempData["SuccessMessage"] = $"Rule #{rule.RuleId} is now {(rule.IsActive ? "ACTIVE" : "DISABLED")}.";
 
         return RedirectToAction(nameof(Index));
     }
@@ -142,16 +143,15 @@ public class AutomationController : Controller
     /// Delete an automation rule.
     /// </summary>
     [HttpPost("DeleteRule")]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteRule(int ruleId)
     {
         var rule = await _context.AutomationRules.FindAsync(ruleId);
-        if (rule != null)
-        {
-            _context.AutomationRules.Remove(rule);
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Rule #{ruleId} removed from farm logic.";
-        }
+        if (rule == null) return NotFound();
+        _context.AutomationRules.Remove(rule);
+        await _context.SaveChangesAsync();
+        TempData["SuccessMessage"] = $"Rule #{ruleId} removed from farm logic.";
 
         return RedirectToAction(nameof(Index));
     }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using AgriSyncIndia.Services;
 using AgriSyncIndia.Data;
 using AgriSyncIndia.ViewModels;
@@ -99,16 +100,15 @@ public class AlertsController : Controller
     /// Acknowledge an alert notification.
     /// </summary>
     [HttpPost("Acknowledge")]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Acknowledge(int alertId, string? severity)
     {
         var alert = await _context.ClimateAlerts.FindAsync(alertId);
-        if (alert != null)
-        {
-            alert.IsAcknowledged = true;
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Alert '{alert.Title}' marked as acknowledged.";
-        }
+        if (alert == null) return NotFound();
+        alert.IsAcknowledged = true;
+        await _context.SaveChangesAsync();
+        TempData["SuccessMessage"] = $"Alert '{alert.Title}' marked as acknowledged.";
 
         return RedirectToAction(nameof(Index), new { severity });
     }

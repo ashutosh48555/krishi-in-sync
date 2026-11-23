@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using AgriSyncIndia.Services;
 using AgriSyncIndia.Data;
 using AgriSyncIndia.Models;
@@ -43,6 +44,7 @@ public class FarmClusterController : Controller
     /// GET: /FarmCluster/Create - Form to add a new farm cluster
     /// </summary>
     [HttpGet("Create")]
+    [Authorize]
     public IActionResult Create(string? returnUrl)
     {
         return View(new CreateFarmClusterViewModel { ReturnUrl = returnUrl });
@@ -52,6 +54,7 @@ public class FarmClusterController : Controller
     /// POST: /FarmCluster/Create - Adds a new farm cluster and saves to EF Core DB
     /// </summary>
     [HttpPost("Create")]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateFarmClusterViewModel model)
     {
