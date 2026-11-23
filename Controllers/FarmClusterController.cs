@@ -20,68 +20,39 @@ public class FarmClusterController : Controller
         _logger = logger;
     }
 
-    /// <summary>
-    /// GET: /FarmCluster/Index - View all registered farm clusters
-    /// </summary>
     [HttpGet]
     [HttpGet("Index")]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index() => View(new FarmClusterListViewModel
     {
-        var clusters = await _context.FarmClusters
-            .OrderByDescending(c => c.ClusterId)
-            .ToListAsync();
+        Clusters = await _context.FarmClusters.AsNoTracking().OrderByDescending(c => c.ClusterId).ToListAsync(),
+        ZoneCount = await _context.Zones.CountAsync()
+    });
 
-        var model = new FarmClusterListViewModel
-        {
-            Clusters = clusters,
-            NewCluster = new CreateFarmClusterViewModel()
-        };
-
-        return View(model);
-    }
-
-    /// <summary>
-    /// GET: /FarmCluster/Create - Form to add a new farm cluster
-    /// </summary>
     [HttpGet("Create")]
     [Authorize]
-    public IActionResult Create(string? returnUrl)
-    {
-        return View(new CreateFarmClusterViewModel { ReturnUrl = returnUrl });
-    }
+    public IActionResult Create(string? returnUrl) => View(new CreateFarmClusterViewModel { ReturnUrl = returnUrl });
 
-    /// <summary>
-    /// POST: /FarmCluster/Create - Adds a new farm cluster and saves to EF Core DB
-    /// </summary>
     [HttpPost("Create")]
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateFarmClusterViewModel model)
     {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
+        var name = model.Name?.Trim() ?? "";
+        if (ModelState.IsValid && await _context.FarmClusters.AnyAsync(c => c.Name.ToLower() == name.ToLower()))
+            ModelState.AddModelError(nameof(model.Name), "val.cl.dup");
+        if (model.Latitude.HasValue != model.Longitude.HasValue)
+            ModelState.AddModelError(model.Latitude.HasValue ? nameof(model.Longitude) : nameof(model.Latitude), "val.cl.both");
+        if (!ModelState.IsValid) return View(model);
 
-        // Check if cluster name already exists
-        bool exists = await _context.FarmClusters.AnyAsync(c => c.Name.ToLower() == model.Name.Trim().ToLower());
-        if (exists)
-        {
-            ModelState.AddModelError("Name", "A farm cluster with this name already exists in the system.");
-            return View(model);
-        }
-
+        var defaults = new FarmCluster();
         var cluster = new FarmCluster
         {
-            Name = model.Name.Trim(),
+            Name = name,
             Region = model.Region.Trim(),
-            Latitude = model.Latitude,
-            Longitude = model.Longitude,
-            TotalAcreage = model.TotalAcreage,
+            Latitude = model.Latitude ?? defaults.Latitude,
+            Longitude = model.Longitude ?? defaults.Longitude,
+            TotalAcreage = model.TotalAcreage ?? defaults.TotalAcreage,
             PrimaryCrops = model.PrimaryCrops.Trim(),
-            Description = string.IsNullOrWhiteSpace(model.Description) 
-                ? $"Smart agricultural research block in {model.Region} cultivating {model.PrimaryCrops}."
-                : model.Description.Trim(),
             Status = "Active",
             CreatedAt = IstClock.Now
         };
@@ -90,15 +61,10 @@ public class FarmClusterController : Controller
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Added new farm cluster: {Name} in {Region}", cluster.Name, cluster.Region);
-        TempData["SuccessMessage"] = $"Farm Cluster '{cluster.Name}' registered successfully! It is now live in your farm selector dropdown.";
+        TempData["SuccessMessage"] = string.Format(Localizer.T(HttpContext.Lang(), "cl.t.added"), cluster.Name);
 
-        // If returnUrl specified and valid, redirect there with the new farm selected
         if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
-        {
             return Redirect(model.ReturnUrl);
-        }
-
-        // Redirect directly to Dashboard with the new farm cluster selected!
         return RedirectToAction("Dashboard", "Climate", new { farm = cluster.Name });
     }
 }

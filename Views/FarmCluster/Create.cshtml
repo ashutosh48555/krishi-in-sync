@@ -1,118 +1,90 @@
 @model AgriSyncIndia.ViewModels.CreateFarmClusterViewModel
 @{
-    ViewData["Title"] = "Add New Farm Cluster";
+    var lang = Context.Lang();
+    string T(string k) => Localizer.T(lang, k);
+    ViewData["Title"] = T("cl.create.title");
 }
+@section Head { <link rel="stylesheet" href="~/css/pages-b.css" asp-append-version="true" /> }
 
-<div class="row justify-content-center my-3">
-    <div class="col-12 col-lg-8">
-        <div class="card card-agri p-4 p-md-5 border-0 shadow-sm">
-            
-            <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
-                <div class="d-flex align-items-center gap-3">
-                    <span class="p-3 bg-success bg-opacity-10 text-success rounded-circle">
-                        <i class="bi bi-geo-alt-fill fs-3"></i>
-                    </span>
-                    <div>
-                        <h4 class="fw-bold text-dark mb-1">Add New Farm Cluster</h4>
-                        <p class="text-muted small mb-0">Register a new agricultural site into the live telemetry and microclimate network</p>
-                    </div>
-                </div>
-                <a asp-controller="Climate" asp-action="Dashboard" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
-                </a>
-            </div>
-
-            <form asp-controller="FarmCluster" asp-action="Create" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" asp-for="ReturnUrl" />
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-3"></div>
-
-                <!-- Cluster Name & Region -->
-                <div class="row g-3 mb-3">
-                    <div class="col-12 col-md-7">
-                        <label asp-for="Name" class="form-label small fw-semibold text-muted"></label>
-                        <input asp-for="Name" class="form-control" placeholder="e.g. Anand Precision Agriculture Hub" />
-                        <span asp-validation-for="Name" class="text-danger small"></span>
-                    </div>
-                    <div class="col-12 col-md-5">
-                        <label asp-for="Region" class="form-label small fw-semibold text-muted"></label>
-                        <input asp-for="Region" class="form-control" placeholder="e.g. Gujarat Plains" />
-                        <span asp-validation-for="Region" class="text-danger small"></span>
-                    </div>
-                </div>
-
-                <!-- GPS Coordinates (with quick Indian presets) -->
-                <div class="row g-3 mb-2">
-                    <div class="col-12 col-md-6">
-                        <label asp-for="Latitude" class="form-label small fw-semibold text-muted"></label>
-                        <input asp-for="Latitude" class="form-control" type="number" step="0.0001" id="inputLat" />
-                        <span asp-validation-for="Latitude" class="text-danger small"></span>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label asp-for="Longitude" class="form-label small fw-semibold text-muted"></label>
-                        <input asp-for="Longitude" class="form-control" type="number" step="0.0001" id="inputLon" />
-                        <span asp-validation-for="Longitude" class="text-danger small"></span>
-                    </div>
-                </div>
-
-                <!-- Coordinate Presets Pill Bar -->
-                <div class="mb-3">
-                    <span class="text-muted small me-2"><i class="bi bi-pin-map me-1"></i>Quick Regional Presets:</span>
-                    <div class="btn-group btn-group-sm flex-wrap" role="group">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setCoords(28.6139, 77.2090, 'Delhi NCR')">Delhi</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setCoords(30.9010, 75.8573, 'Punjab')">Ludhiana</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setCoords(29.6857, 76.9905, 'Haryana')">Karnal</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setCoords(21.1458, 79.0882, 'Vidarbha / MH')">Nagpur</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setCoords(22.5645, 72.9289, 'Gujarat')">Anand</button>
-                    </div>
-                </div>
-
-                <!-- Acreage & Primary Crops -->
-                <div class="row g-3 mb-3">
-                    <div class="col-12 col-md-4">
-                        <label asp-for="TotalAcreage" class="form-label small fw-semibold text-muted"></label>
-                        <input asp-for="TotalAcreage" class="form-control" type="number" step="0.5" />
-                        <span asp-validation-for="TotalAcreage" class="text-danger small"></span>
-                    </div>
-                    <div class="col-12 col-md-8">
-                        <label asp-for="PrimaryCrops" class="form-label small fw-semibold text-muted"></label>
-                        <input asp-for="PrimaryCrops" class="form-control" placeholder="e.g. Basmati Paddy, Cotton, Mustard" />
-                        <span asp-validation-for="PrimaryCrops" class="text-danger small"></span>
-                    </div>
-                </div>
-
-                <!-- Description -->
-                <div class="mb-4">
-                    <label asp-for="Description" class="form-label small fw-semibold text-muted"></label>
-                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Brief note on soil type, irrigation infrastructure, or experimental cultivars."></textarea>
-                    <span asp-validation-for="Description" class="text-danger small"></span>
-                </div>
-
-                <!-- Submit Button -->
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-success flex-grow-1 py-2 fw-semibold shadow-sm">
-                        <i class="bi bi-plus-circle me-1"></i> Save Cluster & View on Dashboard
-                    </button>
-                    <a asp-controller="FarmCluster" asp-action="Index" class="btn btn-outline-secondary px-3">
-                        View All Clusters
-                    </a>
-                </div>
-            </form>
-
-        </div>
+<div class="dh">
+    <div class="dt">
+        <h1 class="sec-title">@T("cl.create.title")</h1>
+        <p class="sub">@T("cl.create.sub")</p>
     </div>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        function setCoords(lat, lon, region) {
-            document.getElementById('inputLat').value = lat;
-            document.getElementById('inputLon').value = lon;
-            const regionInput = document.getElementById('Region');
-            if (regionInput && !regionInput.value) {
-                regionInput.value = region;
-            }
+<div class="card" style="max-width: 620px; margin: 0 auto;">
+    <form asp-action="Create" method="post" class="form-grid">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ReturnUrl" />
+
+        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+        {
+            <div class="notice" style="border-color:var(--crit); background:color-mix(in srgb, var(--crit) 10%, transparent); margin: 0 0 16px;">
+                @await Html.Icon("triangle-alert")
+                <div>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <div>@FormText.Error(lang, error.ErrorMessage)</div>
+                    }
+                </div>
+            </div>
         }
-    </script>
+
+        <div class="fg">
+            <label class="fl" asp-for="Name">@T("cl.f.name")</label>
+            <input asp-for="Name" class="inp" placeholder="e.g. Karnal Research Farm" required />
+            <span asp-validation-for="Name" class="err"></span>
+        </div>
+
+        <div class="fg">
+            <label class="fl" asp-for="Region">@T("cl.f.region")</label>
+            <input asp-for="Region" class="inp" placeholder="e.g. Haryana" required />
+            <span asp-validation-for="Region" class="err"></span>
+        </div>
+
+        <div class="frow">
+            <div class="fg" style="flex:1;">
+                <label class="fl" asp-for="Latitude">@T("cl.f.lat")</label>
+                <input asp-for="Latitude" type="number" step="any" id="f-lat" class="inp" placeholder="28.6139" />
+            </div>
+            <div class="fg" style="flex:1;">
+                <label class="fl" asp-for="Longitude">@T("cl.f.lon")</label>
+                <input asp-for="Longitude" type="number" step="any" id="f-lon" class="inp" placeholder="77.2090" />
+            </div>
+        </div>
+        <p class="sub" style="margin-top:-6px; font-size:12px;">@T("cl.f.hint")</p>
+
+        <div class="presets-row">
+            <span class="sub" style="font-size:12px;">Presets:</span>
+            <button type="button" class="btn-preset" onclick="setLoc(28.6139, 77.2090)">Delhi</button>
+            <button type="button" class="btn-preset" onclick="setLoc(30.9010, 75.8573)">Ludhiana</button>
+            <button type="button" class="btn-preset" onclick="setLoc(29.6857, 76.9905)">Karnal</button>
+            <button type="button" class="btn-preset" onclick="setLoc(21.1458, 79.0882)">Nagpur</button>
+            <button type="button" class="btn-preset" onclick="setLoc(22.5645, 72.9289)">Anand</button>
+        </div>
+
+        <div class="frow" style="margin-top:12px;">
+            <div class="fg" style="flex:1;">
+                <label class="fl" asp-for="TotalAcreage">@T("cl.f.acres")</label>
+                <input asp-for="TotalAcreage" type="number" step="any" class="inp" placeholder="25" required />
+            </div>
+            <div class="fg" style="flex:2;">
+                <label class="fl" asp-for="PrimaryCrops">@T("cl.f.crops")</label>
+                <input asp-for="PrimaryCrops" class="inp" placeholder="@T("cl.f.cropsph")" required />
+            </div>
+        </div>
+
+        <div class="cta" style="margin-top:20px;">
+            <button type="submit" class="btn">@await Html.Icon("check", 14)@T("cl.f.submit")</button>
+            <a asp-action="Index" class="btn sec">@T("cl.f.cancel")</a>
+        </div>
+    </form>
+</div>
+
+<script>
+function setLoc(lat, lon) {
+    document.getElementById('f-lat').value = lat;
+    document.getElementById('f-lon').value = lon;
 }
+</script>

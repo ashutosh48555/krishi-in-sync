@@ -1,66 +1,66 @@
 @model AgriSyncIndia.ViewModels.FarmClusterListViewModel
 @{
-    ViewData["Title"] = "Farm Clusters - AgriSync India";
+    var lang = Context.Lang();
+    string T(string k) => Localizer.T(lang, k);
+    ViewData["Title"] = T("cl.title");
 }
+@section Head { <link rel="stylesheet" href="~/css/pages-b.css" asp-append-version="true" /> }
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card card-agri p-4 border-0">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                <div>
-                    <h4 class="fw-bold mb-1 text-dark">
-                        <i class="bi bi-geo-alt-fill text-success me-2"></i>Registered Farm Clusters & Research Sites
-                    </h4>
-                    <p class="text-muted small mb-0">
-                        Geo-spatial agricultural blocks connected to AgriSync automated climate telemetry.
-                    </p>
-                </div>
-                <div>
-                    <a asp-controller="FarmCluster" asp-action="Create" class="btn btn-success d-flex align-items-center shadow-sm">
-                        <i class="bi bi-plus-circle me-2"></i>
-                        <span>Add New Farm Cluster</span>
-                    </a>
-                </div>
-            </div>
-        </div>
+<div class="dh">
+    <div class="dt">
+        <h1 class="sec-title">@T("cl.title")</h1>
+        <p class="sub">@T("cl.sub")</p>
+    </div>
+    <div class="dact">
+        <a asp-action="Create" class="btn sm">@await Html.Icon("plus", 14)@T("cl.add")</a>
     </div>
 </div>
 
-<div class="row g-3">
-    @foreach (var cluster in Model.Clusters)
+<section class="card c12" aria-labelledby="clusters-h">
+    <div class="ch">
+        @await Html.Icon("layout-grid")
+        <span id="clusters-h">@T("cl.title")</span>
+        <span class="sp">@Model.Clusters.Count</span>
+    </div>
+
+    @if (Model.Clusters.Count == 0)
     {
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card card-agri h-100 p-4 border-0 border-top border-4 border-success d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
-                        <i class="bi bi-pin-map-fill me-1"></i>@cluster.Region
-                    </span>
-                    <span class="badge bg-light text-dark border">
-                        @cluster.TotalAcreage Acres
-                    </span>
-                </div>
-
-                <h5 class="fw-bold text-dark mt-2 mb-1">@cluster.Name</h5>
-                <div class="text-muted small mb-2">
-                    <i class="bi bi-compass me-1"></i>GPS: @cluster.Latitude.ToString("F4")°N, @cluster.Longitude.ToString("F4")°E
-                </div>
-
-                <div class="p-2 bg-light rounded text-dark small mb-3 border">
-                    <span class="text-muted d-block small">Primary Crops:</span>
-                    <strong>@cluster.PrimaryCrops</strong>
-                </div>
-
-                <p class="text-muted small flex-grow-1 mb-3">
-                    @cluster.Description
-                </p>
-
-                <div class="pt-3 border-top d-flex justify-content-between align-items-center mt-auto">
-                    <span class="badge bg-success"><i class="bi bi-broadcast me-1"></i>Live Telemetry</span>
-                    <a asp-controller="Climate" asp-action="Dashboard" asp-route-farm="@cluster.Name" class="btn btn-sm btn-outline-success">
-                        <i class="bi bi-speedometer2 me-1"></i> View Dashboard
-                    </a>
-                </div>
-            </div>
+        <p class="empty">@T("cl.empty")</p>
+    }
+    else
+    {
+        <div class="tscroll" tabindex="0" role="region" aria-label="@T("cl.title")">
+            <table class="ttab">
+                <caption class="sr-only">@T("cl.title")</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">@T("cl.f.name")</th>
+                        <th scope="col">@T("cl.f.region")</th>
+                        <th scope="col">@T("cl.f.acres")</th>
+                        <th scope="col">@T("cl.coords")</th>
+                        <th scope="col">@T("cl.crops")</th>
+                        <th scope="col" class="text-end"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.Clusters)
+                    {
+                        <tr>
+                            <th scope="row"><b>@c.Name</b></th>
+                            <td>@c.Region</td>
+                            <td class="n">@string.Format(T("cl.acres"), ViewFormat.N(c.TotalAcreage, 1))</td>
+                            <td class="sub n">@c.Latitude.ToString("0.0000")°N, @c.Longitude.ToString("0.0000")°E</td>
+                            <td>@c.PrimaryCrops</td>
+                            <td class="text-end">
+                                <a asp-controller="Climate" asp-action="Dashboard" asp-route-farm="@c.Name" class="btn sec sm">
+                                    @await Html.Icon("arrow-right", 14)@T("cl.open")
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     }
-</div>
+</section>
+<p class="note">@T("cl.zonesnote")</p>
