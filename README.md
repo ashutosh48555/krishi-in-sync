@@ -64,6 +64,46 @@
 
 ---
 
+## 🎓 INT402 Syllabus Alignment & Course Outcomes
+
+This application is built for **INT402: Modern Web Programming Tools and Techniques** (C# / .NET Stack). It comprehensively demonstrates all 6 Course Outcomes (CO1 to CO6) prescribed in the university curriculum:
+
+| Course Outcome (CO) | Syllabus Unit & Bloom Level | Curriculum Criterion | Project Implementation & Code Location |
+| :--- | :--- | :--- | :--- |
+| **CO1** | **Unit 1** (UNDERSTAND) | .NET Core architecture, C# fundamentals, CLI setup | Built on **.NET 10** (`net10.0`, C# 13). Complete CLI-based developer lifecycle (`dotnet build`, `dotnet test`, `dotnet run`, `dotnet publish`, `dotnet ef`). Configuration in `AgriSyncIndia.csproj` and `launchSettings.json`. |
+| **CO2** | **Unit 2** (APPLY) | Core C# programming constructs & OOP principles | Strongly typed domain entities with encapsulation (`Models/*.cs`), interfaces & polymorphism (`IOpenMeteoService`, `IClerkKeyProvider`), psychrometric math algorithms (`ClimateRules.cs`), custom LINQ pipelines, and try-catch error resilience. |
+| **CO3** | **Unit 3** (CREATE) | ASP.NET Core MVC Razor views, data-passing, form validation & model binding | ASP.NET Core MVC with Razor (`.cshtml`), partial views (`_Stage.cshtml`, `_HeadlineCard.cshtml`, `_ChartCard.cshtml`), ViewModels (`DashboardViewModel.cs`, etc.), `ViewData`, `TempData` flash messages, and model validation with DataAnnotations (`[Required]`, `[Range]`, `ModelState.IsValid`). |
+| **CO4** | **Unit 4** (APPLY) | Middleware, Dependency Injection & Authentication/Authorization | Custom request middleware (`LanguageMiddleware.cs`, `SecurityHeaders.cs`), built-in DI container (scoped `DbContext`, singleton options/validators, typed HTTP clients), Cookie & Clerk authentication, and role authorization (`[Authorize]`, `Permissions.cs`). |
+| **CO5** | **Unit 5** (CREATE) | SQL Server database design — tables, views, stored procedures | 8 normalized relational database tables. SQL Server stored procedures and DDL scripts in `Scripts/CreateStoredProcedures.sql` (`dbo.Get24HourZoneLogs`, `dbo.GetAggregatedClimateStats`) and `Scripts/InitialMigration_SqlServer.sql`. Multi-provider EF Core support (Postgres, SQLite, SQL Server). |
+| **CO6** | **Unit 6 & 7** (CREATE) | RESTful Web APIs with CRUD functionality validated using Postman | REST API controllers (`[ApiController]`, `[Route("api/[controller]")]`) in `Controllers/Api/RulesApiController.cs` (full CRUD: GET, POST, PUT, DELETE with JSON payloads) and `Controllers/Api/ZonesApiController.cs`. |
+
+### 📬 Testing RESTful Web APIs with Postman / curl (CO6)
+
+The application exposes standard RESTful endpoints for automated API validation in Postman or curl:
+
+```bash
+# 1. GET all zones with latest telemetry
+curl -s http://localhost:5000/api/zones
+
+# 2. GET all automation rules
+curl -s http://localhost:5000/api/rules
+
+# 3. POST - Create a new automation rule (201 Created)
+curl -X POST http://localhost:5000/api/rules \
+  -H "Content-Type: application/json" \
+  -d '{"conditionVariable":"Temperature","operator":">","thresholdValue":35.0,"actionTarget":"Turn ON Exhaust Fans","description":"Created via Postman"}'
+
+# 4. PUT - Update an automation rule
+curl -X PUT http://localhost:5000/api/rules/1 \
+  -H "Content-Type: application/json" \
+  -d '{"thresholdValue":37.5,"description":"Updated threshold via API"}'
+
+# 5. DELETE - Remove an automation rule (204 No Content)
+curl -X DELETE -i http://localhost:5000/api/rules/1
+```
+
+---
+
 ## 🔑 Demo & Evaluation Credentials
 
 For evaluators or offline grading without external OAuth keys:
