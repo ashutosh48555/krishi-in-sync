@@ -11,3 +11,18 @@ App_Data/DataProtection-Keys/
 .idea/
 README.md
 render.yaml
+
+# Secrets and Neon local state: never bake into an image (env comes from the host)
+.env
+.env.local
+.neon
+node_modules/
+
+# Node-only tooling the runtime image does not need
+tools/
+tests/
+hello.ts
+telemetry.ts
+neon.ts
+package.json
+package-lock.json

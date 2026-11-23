@@ -1,13 +1,21 @@
 @model DashboardViewModel
+@inject NeonOptions Neon
 @{
     var lang = Model.CurrentLanguage;
     string T(string k) => Localizer.T(lang, k);
-    ViewData["Title"] = T("dash.title");
-    ViewData["selected"] = (Model.ZoneCards.FirstOrDefault(c => c.Key == "poly") ?? Model.ZoneCards.FirstOrDefault())?.Key;
+    ViewData["Title"] = T("dash.title");    ViewData["selected"] = (Model.ZoneCards.FirstOrDefault(c => c.Key == "poly") ?? Model.ZoneCards.FirstOrDefault())?.Key;
     var chip = Model.AmbientTemp is double t && Model.AmbientHumidity is double h
         ? string.Format(T(Model.AmbientIsStale ? "chip.stale" : "chip.live"), Model.Place, ViewFormat.N(t), ViewFormat.N(h, 0), ViewFormat.N(Model.AmbientVpd, 2))
         : T("chip.none");
 }
+@section Head {
+    @if (Neon.RealtimeEnabled)
+    {
+        <meta name="neon-telemetry-url" content="@Neon.TelemetryUrl" />
+        <meta name="neon-realtime-url" content="@Neon.RealtimeUrl" />
+    }
+}
+
 <div class="dh">
     <div class="dt">
         <h1 class="sec-title">@T("dash.title")</h1>
@@ -67,11 +75,8 @@ else
 @section Scripts {
     <script src="~/lib/chart.umd.min.js"></script>
     <script src="~/js/charts.js" asp-append-version="true"></script>
-    @inject NeonOptions Neon
     @if (Neon.RealtimeEnabled)
     {
-        <meta name="neon-telemetry-url" content="@Neon.TelemetryUrl" />
-        <meta name="neon-realtime-url" content="@Neon.RealtimeUrl" />
         <script type="module" src="~/js/live-zones.js" asp-append-version="true"></script>
     }
 }

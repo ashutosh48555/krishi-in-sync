@@ -12,6 +12,10 @@
     <Content Remove="tests/**" />
     <EmbeddedResource Remove="tests/**" />
     <None Remove="tests/**" />
+    <!-- tools/ holds standalone helper projects (prove-live.mjs + insert-log), not app code -->
+    <Compile Remove="tools/**" />
+    <Content Remove="tools/**" />
+    <None Remove="tools/**" />
   </ItemGroup>
 
   <ItemGroup>

@@ -45,22 +45,31 @@
 
   const short = (name, w) => (w < 520 ? name.split(" ")[0] : name);
   const font = (size, wt) => (wt || 500) + " " + size + "px " + getComputedStyle(document.body).fontFamily;
+  const token = { open: "--s1", poly: "--s2", drip: "--s3" };
 
   // Direct labels at the end of each line, nudged apart so they never overlap.
   const endLabels = {
     id: "endLabels",
     afterDatasetsDraw(chart) {
       const c = chart.ctx, w = chart.width, items = [];
+      const isAll = D && D.selected === "all";
       chart.data.datasets.forEach((ds, i) => {
         const pts = chart.getDatasetMeta(i).data;
         for (let k = pts.length - 1; k >= 0; k--) {
-          if (ds.data[k] != null) { items.push({ x: pts[k].x, y: pts[k].y, t: short(ds.label, w), sel: ds.key === sel }); break; }
+          if (ds.data[k] != null) {
+            items.push({ x: pts[k].x, y: pts[k].y, t: short(ds.label, w), sel: ds.key === sel, col: ds.borderColor });
+            break;
+          }
         }
       });
       items.sort((a, b) => a.y - b.y);
       for (let i = 1; i < items.length; i++) if (items[i].y - items[i - 1].y < 14) items[i].y = items[i - 1].y + 14;
       c.save(); c.textBaseline = "middle";
-      items.forEach((it) => { c.font = font(12, it.sel ? 600 : 500); c.fillStyle = it.sel ? css("--accent") : css("--text-3"); c.fillText(it.t, it.x + 8, it.y); });
+      items.forEach((it) => {
+        c.font = font(12, (isAll || it.sel) ? 600 : 500);
+        c.fillStyle = isAll ? it.col : (it.sel ? css("--accent") : css("--text-3"));
+        c.fillText(it.t, it.x + 8, it.y);
+      });
       c.restore();
     },
   };
@@ -77,11 +86,13 @@
   };
 
   function dataset(s, kind) {
+    const isAll = D && D.selected === "all";
     const on = s.key === sel;
+    const border = isAll ? css(token[s.key] || "--s1") : (on ? css("--accent") : css("--line-2"));
     return {
       key: s.key, label: s.name, data: kind === "vpd" ? s.vpd : s.temp, spanGaps: false, tension: 0.3,
-      borderColor: on ? css("--accent") : css("--line-2"), borderWidth: on ? 2.5 : 1.75,
-      backgroundColor: css("--accent-soft"), fill: on && kind === "temp" ? "origin" : false,
+      borderColor: border, borderWidth: isAll ? 2 : (on ? 2.5 : 1.75),
+      backgroundColor: css("--accent-soft"), fill: !isAll && on && kind === "temp" ? "origin" : false,
       pointRadius: 0, pointHoverRadius: 4, pointHitRadius: 14, order: on ? 0 : 1,
     };
   }

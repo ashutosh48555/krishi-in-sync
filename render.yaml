@@ -4,4 +4,20 @@ services:
     runtime: docker
     plan: free
     autoDeploy: true
-    healthCheckPath: /Climate/Dashboard
+    healthCheckPath: /healthz
+    envVars:
+      # Neon pooled connection string (postgresql://...). Program.cs converts it for Npgsql.
+      - key: DATABASE_URL
+        sync: false
+      # Neon direct connection string, used only for Migrate().
+      - key: DATABASE_URL_UNPOOLED
+        sync: false
+      # Public Neon endpoints for the browser (no secrets).
+      - key: NEON_REALTIME_URL
+        sync: false
+      - key: NEON_TELEMETRY_URL
+        sync: false
+      - key: NEON_BRANCH_ID
+        sync: false
+      - key: NEON_FUNCTION_HOST_SUFFIX
+        sync: false

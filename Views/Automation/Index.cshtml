@@ -87,7 +87,7 @@
                                         @await Html.Icon("power", 14)
                                     </button>
                                 </form>
-                                <form asp-action="DeleteRule" method="post" class="d-inline" onsubmit="return confirm('@T("au.delete.q")');">
+                                <form asp-action="DeleteRule" method="post" class="d-inline" data-confirm="@T("au.delete.q")">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="ruleId" value="@rule.RuleId" />
                                     <button type="submit" class="btn sec sm btn-del" title="@T("au.delete")">

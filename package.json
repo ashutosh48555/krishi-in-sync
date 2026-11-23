@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "@neon/config": "^1.14.6",
+    "@neon/env": "^2.1.9",
+    "@neon/realtime": "^0.2.1",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  },
+  "name": "krishi-in-sync",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "dotnet build -c Release",
+    "test": "dotnet test",
+    "build:realtime": "esbuild node_modules/@neon/realtime/dist/client.js --bundle --format=esm --minify --outfile=wwwroot/lib/neon-realtime.js",
+    "prove:live": "node tools/prove-live.mjs",
+    "deploy": "neon deploy --env .env.local"
+  }
+}
