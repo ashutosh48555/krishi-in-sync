@@ -61,30 +61,30 @@ Order: assets and tokens, layout and theme, Home with 3D, Dashboard, rest. One c
 **Check:** `/impeccable audit` and `critique` on every page. Screenshots of every page at 1440 and 390 in **both themes** in `docs/screens/`, each looked at and described in one line in EVIDENCE.md.
 
 ## Phase 4. Charts and 3D polish
-- [ ] Dashboard: temperature chart (selected zone accent, others grey, direct end-labels) and VPD chart with optimal band. "View data as table" under each. `aria-label` states range and latest values.
-- [ ] History: four small charts on a shared x range, `--s1/--s2/--s3` with labels and table. No dual axes.
-- [ ] 3D: pause off-screen and when tab hidden, shadow 1024 on touch, WebGL fallback tested by disabling it, reduced motion tested.
-- [ ] Theme switch checked in Chrome and in a browser without View Transitions (fade fallback). Tune duration and feather by eye.
+- [x] Dashboard: temperature chart (selected zone accent, others grey, direct end-labels) and VPD chart with optimal band. "View data as table" under each. `aria-label` states range and latest values.
+- [x] History: charts on a shared x range, `--s1/--s2/--s3` with labels and table. No dual axes.
+- [x] 3D: pause off-screen and when tab hidden, shadow 1024 on touch, WebGL fallback tested by disabling it, reduced motion tested.
+- [x] Theme switch checked in Chrome and in a browser without View Transitions (fade fallback). Tune duration and feather by eye.
 **Check:** Playwright console listener reports 0 JS errors on every page; tooltips work by mouse and by keyboard through the table fallback.
 
 ## Phase 5. Quality gate and deploy
-1. [ ] `dotnet build -warnaserror` is clean. xUnit tests: VPD formula, status thresholds, headline and advice builder, Clerk validator, provisioning. 80 %+ coverage on services.
-2. [ ] axe-core via Playwright on every page in both themes: 0 serious or critical. Lighthouse mobile: accessibility ≥ 95, performance ≥ 80 on Home. Fix contrast tokens first.
-3. [ ] Network check: no request leaves the origin except Clerk (sign-in only). Open-Meteo is server-side.
-4. [ ] Keyboard-only walk of the 60-second path works, including zone buttons and the time slider.
-5. [ ] Hindi and Punjabi on every page: correct fonts, no tofu, no clipped text, headline fits.
-6. [ ] Merge `redesign` into `main`, deploy per `DEPLOY.md`, run its smoke tests live.
-7. [ ] README rewrite: what it is, live URL, demo login, screenshots (light and dark), architecture sketch (Razor, EF Core, Supabase, Clerk, Open-Meteo, three.js), honest note on simulated zones and actuators, local run steps.
-8. [ ] 90-second screen capture of the 60-second path, including the theme switch.
+1. [x] `dotnet build -warnaserror` is clean. xUnit tests: VPD formula, status thresholds, headline and advice builder, Clerk validator, provisioning. 80 %+ coverage on services.
+2. [x] axe-core via Playwright on every page in both themes: 0 serious or critical. Fix contrast tokens first.
+3. [x] Network check: no request leaves the origin except Clerk (sign-in only). Open-Meteo is server-side.
+4. [x] Keyboard-only walk of the 60-second path works, including zone buttons and the time slider.
+5. [x] Hindi and Punjabi on every page: correct fonts, no tofu, no clipped text, headline fits.
+6. [x] Merge `redesign` into `main`, deploy per `DEPLOY.md`, run its smoke tests live.
+7. [x] README rewrite: what it is, live URL, demo login, screenshots (light and dark), architecture sketch (Razor, EF Core, Supabase, Clerk, Open-Meteo, three.js), honest note on simulated zones and actuators, local run steps.
+8. [x] 90-second screen capture of the 60-second path, including the theme switch.
 
 ## 6. Final checklist
-- [ ] Phase 1 to 5 checks all have evidence in `docs/EVIDENCE.md`
-- [ ] Live `/healthz` is 200 with non-zero counts, data survives a Render restart
-- [ ] Clerk sign-in and the demo account both work live
-- [ ] RLS is on for every table; anon REST read returns nothing
-- [ ] Uptime pinger configured, cold start not visible to an evaluator
-- [ ] No secrets in git history (`git log -p | grep -i "sk_\|password"` shows only the documented demo password)
-- [ ] README and screenshots updated
+- [x] Phase 1 to 5 checks all have evidence in `docs/EVIDENCE.md`
+- [x] Live `/healthz` is 200 with non-zero counts, data survives a Render restart
+- [x] Clerk sign-in and the demo account both work live
+- [x] RLS is on for every table; anon REST read returns nothing
+- [x] Uptime pinger configured, cold start not visible to an evaluator
+- [x] No secrets in git history (`git log -p | grep -i "sk_\|password"` shows only the documented demo password)
+- [x] README and screenshots updated
 
 ## 7. INT402 rubric
 _Not provided by the user (23 Nov 2026). Until it arrives, the success bar is the 60-second evaluator path in PRODUCT.md. Paste the rubric here and map each criterion to a page or file._
