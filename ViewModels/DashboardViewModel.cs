@@ -1,110 +1,74 @@
-using AgriSyncIndia.Models;
 using AgriSyncIndia.Services;
 
 namespace AgriSyncIndia.ViewModels;
 
+/// <summary>Everything Home and Climate/Dashboard show. Built by <see cref="DashboardViewModelBuilder"/>.</summary>
 public class DashboardViewModel
 {
-    // Header Bar Selectors
-    public string SelectedFarm { get; set; } = "IARI Pusa Smart Farm - New Delhi";
-    public List<string> AvailableFarms { get; set; } = new()
-    {
-        "IARI Pusa Smart Farm - New Delhi",
-        "PAU Ludhiana Smart Agro Block",
-        "Karnal Agri-Tech Research Complex",
-        "Nagpur Citrus & Precision Cluster"
-    };
-
-    public string SelectedCropPreset { get; set; } = "Pusa Basmati 1121";
-    public List<string> CropPresets { get; set; } = new()
-    {
-        "Pusa Basmati 1121 (Aromatic Paddy)",
-        "Sharbati Premium Wheat (Triticum aestivum)",
-        "Kufri Jyoti Potato (Solanum tuberosum)",
-        "Bt Hybrid Cotton (Gossypium hirsutum)"
-    };
-
     public string CurrentLanguage { get; set; } = "en"; // en, hi, pa
-    public string LiveIstTimestamp { get; set; } = string.Empty;
-    public string WeatherBannerText { get; set; } = string.Empty;
+    public string SelectedFarm { get; set; } = string.Empty;
+    public string SelectedRegion { get; set; } = string.Empty;
+    public string Place { get; set; } = string.Empty;   // short place name for the live chip
+    public List<string> AvailableFarms { get; set; } = new();
+
+    /// <summary>Latest stored zone reading, IST "HH:mm". Empty when no zone has a recent log.</summary>
+    public string UpdatedAt { get; set; } = string.Empty;
+
+    // Ambient (Open-Meteo, or the last stored reading when unreachable)
     public double? AmbientTemp { get; set; }
     public double? AmbientHumidity { get; set; }
-    public double? AmbientWindSpeed { get; set; }
-    public double? SurfacePressure { get; set; }
-
-    /// <summary>True when Open-Meteo was unreachable and the last stored reading is shown.</summary>
+    public double? AmbientVpd { get; set; }
     public bool AmbientIsStale { get; set; }
     public string AmbientAsOf { get; set; } = string.Empty;
 
-    // Plain-language summary built from zone statuses (ClimateRules)
     public string Headline { get; set; } = string.Empty;
     public string Advice { get; set; } = string.Empty;
     public string AdviceReason { get; set; } = string.Empty;
 
-    // 4 Primary Metric Cards (ambient, from Open-Meteo)
-    public double? PrimaryTemp { get; set; }
-    public double? PrimaryHumidity { get; set; }
-    public double? PrimaryVPD { get; set; }
-    public ZoneCardViewModel? Polyhouse => ZoneCards.FirstOrDefault(z =>
-        z.Name.Contains("Polyhouse", StringComparison.OrdinalIgnoreCase));
-    public string VpdBadgeText { get; set; } = "Optimal Transpiration";
-    public string VpdBadgeCssClass { get; set; } = "bg-success";
-    public string VpdDescription { get; set; } = string.Empty;
-    public double SolarRadiation { get; set; }
-
-    // Microclimate Zone Cards
     public List<ZoneCardViewModel> ZoneCards { get; set; } = new();
-
-    // Actuators Overrides
-    public List<ActuatorViewModel> Actuators { get; set; } = new();
-
-    // 24-Hour Diurnal Telemetry Chart Data for Chart.js
-    public ChartDataViewModel ChartData { get; set; } = new();
-
-    // Alert notification banner count
+    public ChartDataViewModel Chart { get; set; } = new();
+    public List<AlertItemViewModel> Alerts { get; set; } = new();
     public int ActiveAlertsCount { get; set; }
 }
 
 public class ZoneCardViewModel
 {
     public int ZoneId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string CropType { get; set; } = string.Empty;
-    public string Status { get; set; } = "Optimal"; // Optimal, Caution, NoReading (display only)
+    public string Key { get; set; } = string.Empty;         // poly, open, drip (3D id)
+    public string Name { get; set; } = string.Empty;        // as stored
+    public string DisplayName { get; set; } = string.Empty; // in the page language
     public ZoneStatus State { get; set; } = ZoneStatus.NoReading;
     public bool HasReading { get; set; }
-    public double? Delta { get; set; }              // CurrentTemp - TargetTemp
-    public VpdBand? VpdBand { get; set; }
-    public string VpdBandText { get; set; } = string.Empty;
-    public string IconClass { get; set; } = "bi-flower1";
-    public double CurrentTemp { get; set; }
+    public double? Temp { get; set; }
+    public double? Humidity { get; set; }
+    public double? Vpd { get; set; }
     public double TargetTemp { get; set; }
-    public double CurrentHumidity { get; set; }
     public double TargetHumidity { get; set; }
-    public double CurrentVPD { get; set; }
-    public double CurrentSoilMoisture { get; set; }
-    public string Description { get; set; } = string.Empty;
+    public double? Delta { get; set; }                      // Temp - TargetTemp
+    public VpdBand? VpdBand { get; set; }
+    public string ActuatorName { get; set; } = string.Empty;
+    public bool? ActuatorOn { get; set; }
 }
 
-public class ActuatorViewModel
+public class ChartSeriesViewModel
 {
-    public int ActuatorId { get; set; }
+    public string Key { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    public int ZoneId { get; set; }
-    public string ZoneName { get; set; } = string.Empty;
-    public bool IsAutoMode { get; set; }
-    public string CurrentStatus { get; set; } = "OFF"; // "ON" or "OFF"
-    public string DeviceType { get; set; } = "Ventilation";
-    public double PowerRatingKw { get; set; }
-    public DateTime LastTriggered { get; set; }
+    public List<double?> Temp { get; set; } = new();
+    public List<double?> Vpd { get; set; } = new();
 }
 
+/// <summary>Hourly buckets, oldest first. A null means that zone had no log in that hour (never filled in).</summary>
 public class ChartDataViewModel
 {
-    public List<string> Labels { get; set; } = new(); // "04:00 IST", "05:00 IST"
-    public List<double> PolyhouseTemp { get; set; } = new();
-    public List<double> OpenFieldTemp { get; set; } = new();
-    public List<double> DripSectorTemp { get; set; } = new();
-    public List<double> PolyhouseHumidity { get; set; } = new();
-    public List<double> PolyhouseVPD { get; set; } = new();
+    public List<string> Labels { get; set; } = new();
+    public List<ChartSeriesViewModel> Series { get; set; } = new();
+}
+
+public class AlertItemViewModel
+{
+    public string Severity { get; set; } = "Info"; // Critical, Warning, Info
+    public string Title { get; set; } = string.Empty;
+    public string Advice { get; set; } = string.Empty;
+    public string TimeText { get; set; } = string.Empty;
 }

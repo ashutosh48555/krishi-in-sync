@@ -1,0 +1,40 @@
+@* Zones table. Rows are selectable: the zone name is a real button (Enter and Space work), clicking the row also selects. *@
+@model DashboardViewModel
+@{
+    var lang = Model.CurrentLanguage;
+    var selected = (string?)ViewData["selected"] ?? Model.ZoneCards.FirstOrDefault()?.Key;
+    string T(string k) => Localizer.T(lang, k);
+}
+<div class="tscroll">
+<table class="ztable">
+    <caption class="sr-only">@T("card.zones")</caption>
+    <thead>
+        <tr class="tr th">
+            <th scope="col">@T("m.zone")</th><th scope="col">@T("m.temp")</th><th scope="col">@T("m.hum")</th><th scope="col">@T("m.vpdhead")</th><th scope="col">@T("m.status")</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var c in Model.ZoneCards)
+    {
+        var isSel = c.Key == selected;
+        var tone = ViewFormat.Tone(c.VpdBand);
+        <tr class="tr@(isSel ? " sel" : "")" data-zone="@c.Key">
+            <th scope="row"><button type="button" class="zn" aria-pressed="@(isSel ? "true" : "false")"><i></i>@c.DisplayName</button></th>
+            <td class="num" data-label="@T("m.temp")">
+                @if (c.HasReading) { <text>@ViewFormat.N(c.Temp) °C<small>@string.Format(T("m.target"), ViewFormat.N(c.TargetTemp)) · @ViewFormat.Gap(lang, c)</small></text> }
+                else { <text>@T("m.noreading")</text> }
+            </td>
+            <td class="num" data-label="@T("m.hum")">@(c.HasReading ? ViewFormat.N(c.Humidity, 0) + " %" : "—")</td>
+            <td class="vc" data-label="@T("m.vpd")">@if (c.HasReading) {<partial name="_VpdTrack" model="c.Vpd" />}</td>
+            <td data-label="@T("m.status")">
+                @if (c.HasReading)
+                {
+                    <span class="st @tone">@await Html.Icon(tone == "" ? "check" : "triangle-alert", 14)@ViewFormat.Band(lang, c.VpdBand) · @ViewFormat.N(c.Vpd, 2)</span>
+                }
+                else { <span class="st mute">@T("m.noreading")</span> }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+</div>

@@ -1,8 +1,67 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model DashboardViewModel
+@{
+    var lang = Model.CurrentLanguage;
+    string T(string k) => Localizer.T(lang, k);
+    var sel = Model.ZoneCards.FirstOrDefault(c => c.Key == "poly") ?? Model.ZoneCards.FirstOrDefault();
+    ViewData["Title"] = T("nav.dashboard");
+    ViewData["selected"] = sel?.Key;
+    var chip = Model.AmbientTemp is double t && Model.AmbientHumidity is double h
+        ? string.Format(T(Model.AmbientIsStale ? "chip.stale" : "chip.live"), Model.Place, ViewFormat.N(t), ViewFormat.N(h, 0), ViewFormat.N(Model.AmbientVpd, 2))
+        : T("chip.none");
 }
-
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="hero">
+    <div class="copy">
+        <div class="chip"><span class="dot @(Model.AmbientTemp == null || Model.AmbientIsStale ? "off" : null)"></span><span>@chip</span></div>
+        <h1>@T("home.h1")</h1>
+        <p class="lead">@T("home.lead")</p>
+        <div class="cta">
+            <a class="btn" asp-controller="Climate" asp-action="Dashboard"><span>@T("home.open")</span>@await Html.Icon("arrow-right")</a>
+            @if (User.Identity?.IsAuthenticated != true)
+            {
+                <a class="btn sec" asp-controller="Account" asp-action="Login" asp-route-demo="true">@T("home.demo")</a>
+            }
+        </div>
+        <p class="note">@T("home.note")</p>
+    </div>
+    <partial name="_Stage" model="Model" />
 </div>
+
+<div class="bento">
+    <section class="card c5"><partial name="_HeadlineCard" model="Model" /></section>
+    <section class="card c7" aria-live="polite" id="selcard" aria-labelledby="sel-h">
+        <div class="ch">@await Html.Icon("layout-grid")<span id="sel-h">@T("card.sel")</span></div>
+        @if (sel != null)
+        {
+            <h3 class="zt" data-f="title">@sel.DisplayName</h3>
+            <div class="mets">
+                <div class="met"><div class="k">@await Html.Icon("thermometer")@T("m.temp")</div><div class="v"><span data-f="temp">@ViewFormat.N(sel.Temp)</span><small data-u @(sel.HasReading ? null : "hidden")>°C</small></div></div>
+                <div class="met"><div class="k">@await Html.Icon("droplet")@T("m.hum")</div><div class="v"><span data-f="hum">@ViewFormat.N(sel.Humidity, 0)</span><small data-u @(sel.HasReading ? null : "hidden")>%</small></div></div>
+                <div class="met"><div class="k">@await Html.Icon("wind")@T("m.vpd")</div><div class="v"><span data-f="vpd">@ViewFormat.N(sel.Vpd, 2)</span><small data-u @(sel.HasReading ? null : "hidden")>kPa</small></div></div>
+                <div class="met"><div class="k">@await Html.Icon("power")@T("m.act")</div><div class="v sm"><span data-f="act">@(sel.ActuatorOn is null ? T("m.none") : T(sel.ActuatorOn == true ? "m.on" : "m.off"))</span><span class="sim" data-f="sim" @(sel.ActuatorOn == null ? "hidden" : null)>@T("m.simulated")</span><small class="an" data-f="actName">@sel.ActuatorName</small></div></div>
+            </div>
+            <p class="note" data-f="note" @(sel.HasReading ? "hidden" : null)>@T("m.noreadinghint")</p>
+        }
+    </section>
+
+    <section class="card c12" id="zones" aria-labelledby="zones-h">
+        <div class="ch">@await Html.Icon("list")<span id="zones-h">@T("card.zones")</span><span class="sp">@T("card.modelled")</span></div>
+        <partial name="_ZonesTable" model="Model" />
+    </section>
+
+    <section class="card c8">
+        <partial name="_ChartCard" model="Model" view-data='new ViewDataDictionary(ViewData) { { "kind", "temp" } }' />
+    </section>
+    <section class="card c4"><partial name="_AlertsCard" model="Model" /></section>
+</div>
+
+<partial name="_FarmData" model="Model" />
+<partial name="_ChartData" model="Model" />
+
+@section Scripts {
+    <script src="~/lib/three/three.min.js"></script>
+    <script src="~/lib/chart.umd.min.js"></script>
+    <script src="~/js/farm3d-sky.js" asp-append-version="true"></script>
+    <script src="~/js/farm3d.js" asp-append-version="true"></script>
+    <script src="~/js/charts.js" asp-append-version="true"></script>
+    <script src="~/js/home.js" asp-append-version="true"></script>
+}

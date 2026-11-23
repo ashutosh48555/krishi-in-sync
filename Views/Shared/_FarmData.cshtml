@@ -1,0 +1,32 @@
+@* The #farm-data JSON for farm3d.js and home.js, built only from the view model (real readings). Safe in a script tag (default encoder). *@
+@model DashboardViewModel
+@using System.Text.Json
+@{
+    var lang = Model.CurrentLanguage;
+    string T(string k) => Localizer.T(lang, k);
+    var zones = Model.ZoneCards.Select(c => new
+    {
+        id = c.Key,
+        name = new { en = Localizer.T("en", "zone." + c.Key), hi = Localizer.T("hi", "zone." + c.Key), pa = Localizer.T("pa", "zone." + c.Key) },
+        temp = c.Temp, humidity = c.Humidity, vpd = c.Vpd, target = c.TargetTemp,
+        status = ViewFormat.Band(lang, c.VpdBand),
+        offTarget = c.State == ZoneStatus.Above,
+        d = new
+        {
+            title = c.DisplayName,
+            has = c.HasReading,
+            temp = ViewFormat.N(c.Temp), hum = ViewFormat.N(c.Humidity, 0), vpd = ViewFormat.N(c.Vpd, 2),
+            act = c.ActuatorOn is null ? T("m.none") : T(c.ActuatorOn == true ? "m.on" : "m.off"),
+            actName = c.ActuatorName, sim = c.ActuatorOn != null
+        }
+    });
+    var json = JsonSerializer.Serialize(new
+    {
+        lang,
+        selected = ViewData["selected"],
+        labels = new { tod = new[] { T("tod.night"), T("tod.dawn"), T("tod.day"), T("tod.dusk") }, noReading = T("m.noreadinghint") },
+        ambient = new { temp = Model.AmbientTemp, humidity = Model.AmbientHumidity },
+        zones
+    }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+}
+<script type="application/json" id="farm-data">@Html.Raw(json)</script>

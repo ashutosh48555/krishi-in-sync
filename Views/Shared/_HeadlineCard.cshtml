@@ -1,0 +1,12 @@
+@* "Right now": plain-language headline plus the rule-based advice card. Model = DashboardViewModel. *@
+@model DashboardViewModel
+@{ string T(string k) => Localizer.T(Model.CurrentLanguage, k); }
+<div class="ch">@await Html.Icon("lightbulb")<span>@T("card.now")</span><span class="sp">@T("card.modelledtag")</span></div>
+<p class="big">@Model.Headline</p>
+<div class="advice">
+    @await Html.Icon("lightbulb", 18)
+    <div>
+        <p><span class="sr-only">@T("card.advice"): </span>@Model.Advice</p>
+        <small>@string.Format(T("card.why"), Model.AdviceReason)</small>
+    </div>
+</div>

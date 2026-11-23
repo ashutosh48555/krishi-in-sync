@@ -1,0 +1,3 @@
+@* Server-rendered VPD track. Model = VPD (double?). The marker position is set by charts.js from data-pos (no inline style, strict CSP). *@
+@model double?
+<div class="trk" aria-hidden="true"><i></i><i></i><i class="opt"></i><i></i><i></i>@if (Model != null) {<span class="pt @ViewFormat.Tone(ClimateRules.Band(Model.Value))" data-pos="@ViewFormat.Pos(Model)"></span>}</div>

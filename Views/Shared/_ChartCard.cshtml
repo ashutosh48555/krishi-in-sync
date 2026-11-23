@@ -1,0 +1,40 @@
+@* Zone chart + "View data as table". Model = DashboardViewModel; ViewData["kind"] = "temp" or "vpd". Drawn by charts.js from #chart-data. *@
+@model DashboardViewModel
+@{
+    var lang = Model.CurrentLanguage;
+    var kind = (string)ViewData["kind"]!;
+    var isTemp = kind == "temp";
+    string T(string k) => Localizer.T(lang, k);
+    var title = T(isTemp ? "card.t24" : "card.vpd24");
+    var unit = isTemp ? "°C" : "kPa";
+    var series = Model.Chart.Series;
+    double? Last(List<double?> v) => v.LastOrDefault(x => x != null);
+    var latest = string.Join(", ", series.Select(s => $"{s.Name} {ViewFormat.N(Last(isTemp ? s.Temp : s.Vpd), isTemp ? 1 : 2)} {unit}"));
+    var labels = Model.Chart.Labels;
+    var aria = labels.Count == 0 ? T("chart.empty")
+        : string.Format(T("chart.aria"), title + ".", labels[0], labels[^1], latest);
+}
+<div class="ch">@await Html.Icon("line-chart")<span>@title</span>
+    @if (!isTemp) {<span class="sp">@T("chart.band")</span>}
+</div>
+@if (labels.Count == 0)
+{
+    <p class="empty">@T("chart.empty")</p>
+}
+else
+{
+    <div class="cv"><canvas data-chart="@kind" role="img" aria-label="@aria"></canvas></div>
+    <button type="button" class="btn sec sm tgl" data-table-toggle="tbl-@kind" aria-expanded="false" data-show="@T("chart.table")" data-hide="@T("chart.hide")">@T("chart.table")</button>
+    <div class="tscroll" id="tbl-@kind" hidden tabindex="0" role="region" aria-label="@title">
+        <table class="dtable">
+            <caption class="sr-only">@title (@unit)</caption>
+            <thead><tr><th scope="col">@T("chart.time")</th>@foreach (var s in series) {<th scope="col">@s.Name</th>}</tr></thead>
+            <tbody>
+            @for (var i = 0; i < labels.Count; i++)
+            {
+                <tr><th scope="row">@labels[i]</th>@foreach (var s in series) {<td>@ViewFormat.N((isTemp ? s.Temp : s.Vpd)[i], isTemp ? 1 : 2)</td>}</tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

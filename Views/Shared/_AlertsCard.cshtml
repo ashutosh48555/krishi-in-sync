@@ -1,0 +1,17 @@
+@* Open alerts from the database. Model = DashboardViewModel. *@
+@model DashboardViewModel
+@{ string T(string k) => Localizer.T(Model.CurrentLanguage, k); }
+<div class="ch">@await Html.Icon("bell")<span>@T("card.alerts")</span>@if (Model.ActiveAlertsCount > 0) {<span class="sp">@Model.ActiveAlertsCount</span>}</div>
+@if (Model.Alerts.Count == 0)
+{
+    <div class="al"><span class="ico good">@await Html.Icon("check")</span><div><b>@T("al.none")</b></div></div>
+}
+@foreach (var a in Model.Alerts)
+{
+    var tone = ViewFormat.Tone(a.Severity);
+    <div class="al">
+        <span class="ico @tone">@await Html.Icon(a.Severity == "Info" ? "bell" : "triangle-alert")</span>
+        <div><b>@a.Title</b><span>@a.Advice</span><span class="when">@T("al.sev." + a.Severity) · @a.TimeText IST</span></div>
+    </div>
+}
+<p class="more"><a asp-controller="Alerts" asp-action="Index">@T("al.all")</a></p>

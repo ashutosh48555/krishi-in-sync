@@ -1,0 +1,14 @@
+@* The 3D stage (farm3d.js fills the canvas, zone buttons and pins). Model = DashboardViewModel. *@
+@model DashboardViewModel
+@{ string T(string k) => Localizer.T(Model.CurrentLanguage, k); }
+<div class="stage" id="stage">
+    <div class="sky"><i class="hill h1"></i><i class="hill h2"></i><div class="stars" id="stars"></div><div class="sundisc" id="sd"></div><div class="rays"></div><i class="cloud cl1"></i><i class="cloud cl2"></i><i class="cloud cl3"></i></div>
+    <canvas id="c" role="img" aria-label="@T("stage.aria")"></canvas>
+    <div class="grade"></div>
+    <div class="fallback" id="fb">@T("stage.fallback")</div>
+    <div class="hint">@await Html.Icon("move", 14)<span>@T("stage.hint")</span></div>
+    <div class="bar">
+        <div id="zbs" role="group" aria-label="@T("zones.choose")"></div>
+        <label class="tm">@await Html.Icon("sun", 14)<input id="hour" type="range" min="0" max="24" step="0.25" value="13" aria-label="@T("stage.time")"><span class="tl" id="hl">13:00</span></label>
+    </div>
+</div>

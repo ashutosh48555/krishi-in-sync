@@ -1,0 +1,15 @@
+@* JSON for charts.js. System.Text.Json's default encoder escapes < > & ' so it is safe inside a script tag. *@
+@model DashboardViewModel
+@using System.Text.Json
+@{
+    string T(string k) => Localizer.T(Model.CurrentLanguage, k);
+    var json = JsonSerializer.Serialize(new
+    {
+        selected = (string?)ViewData["selected"] ?? Model.ZoneCards.FirstOrDefault()?.Key,
+        labels = Model.Chart.Labels,
+        series = Model.Chart.Series.Select(s => new { key = s.Key, name = s.Name, temp = s.Temp, vpd = s.Vpd }),
+        band = new[] { ClimateRules.VpdVegetativeMax, ClimateRules.VpdOptimalMax },
+        text = new { band = T("chart.band"), time = T("chart.time") }
+    }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+}
+<script type="application/json" id="chart-data">@Html.Raw(json)</script>
