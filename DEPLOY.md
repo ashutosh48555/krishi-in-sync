@@ -1,19 +1,26 @@
 # DEPLOY.md
 
-Current: Render, Docker runtime, free plan, Singapore, auto-deploy from `main`. Database: **Supabase Postgres** (decision, 23 Nov 2026: full Postgres for all data).
-`Dockerfile` and `render.yaml` are **not in the zip** the project came from. Check the GitHub repo for them in Phase 0; create them in Phase 5 if missing.
+Current: Render, Docker runtime, free plan, Singapore, auto-deploy from `main`. Database: **Postgres, provider not yet chosen: Supabase or Neon** (decision 23 Nov 2026: full Postgres for all data; the user picks the provider later).
+`Dockerfile` and `render.yaml` exist in the repo (checked 23 Nov 2026). Phase 5 edits them: env vars with `sync: false`, `healthCheckPath: /healthz`.
 Old SQLite-first plan is archived in `docs/archive/DEPLOY.v1.md`.
 
-## 1. Data tier: Supabase Postgres
-- Create a Supabase project in the region closest to Render (Mumbai `ap-south-1` or Singapore). Free projects **pause after about a week of inactivity**: the uptime pinger on `/healthz` (it queries the DB) keeps it awake.
-- Render free instances are IPv4. Supabase's direct host is IPv6 only, so use the **pooler connection string, session mode**, from the Supabase dashboard (Connect).
-  Npgsql format (placeholders only, never commit real values):
-  `Host=<pooler-host>;Port=5432;Database=postgres;Username=postgres.<project-ref>;Password=<db-password>;SSL Mode=Require;Trust Server Certificate=true`
+## 1. Data tier: Postgres (Supabase or Neon)
+**Provider-agnostic by design.** Both are plain Postgres reached through Npgsql, so code and migrations are identical. Only the connection string changes, so switching later is an env-var change.
+Copy the exact string from the provider's dashboard (formats below are from memory, check them):
+| | Supabase | Neon |
+|---|---|---|
+| Which string | **Pooler, session mode** (IPv4; direct host is IPv6 only) | **Pooled** host (name contains `-pooler`) for the app |
+| Idle behaviour | Free project pauses after about a week idle | Compute scales to zero after about 5 min idle, wakes in about a second |
+| Extra surface | REST API exposes `public`: turn RLS on (below) | Data API is off unless enabled: RLS optional, harmless |
+| Npgsql form | `Host=<pooler-host>;Port=5432;Database=postgres;Username=postgres.<ref>;Password=<pw>;SSL Mode=Require` | `Host=<endpoint>-pooler.<region>.aws.neon.tech;Database=<db>;Username=<role>;Password=<pw>;SSL Mode=Require` |
+- **Migrations connection:** `Migrate()` takes an advisory lock, which a transaction-mode pooler (Neon pooled) can break. Code reads `ConnectionStrings:Migrations` for `Migrate()` when set (use the provider's **direct** string), else `DefaultConnection`.
+- A wake-up after idle adds about a second to the first request on Neon: the uptime pinger on `/healthz` avoids it. The user will say which provider to use; until then nothing in the code names a provider.
+- Create the database in the region closest to Render (Mumbai or Singapore). The uptime pinger on `/healthz` (it queries the DB) keeps Supabase from pausing and Neon awake. Never commit real connection strings.
 - Code: add `Npgsql.EntityFrameworkCore.PostgreSQL` (version compatible with EF Core for net10), remove the SQL Server package and the SQL Server connection probe in `Program.cs`.
   Provider rule: connection string set means Postgres; unset means local SQLite file for `dotnet run` without secrets.
 - **Migrations:** delete the old `Migrations/` (generated for another provider), regenerate `InitialCreate` for Postgres, call `Migrate()` at startup instead of `EnsureCreated`. Never mix the two.
 - **Timestamps:** use `IstClock.Now` (unspecified kind) everywhere, or Npgsql rejects `DateTime` of kind Utc for `timestamp without time zone`.
-- **Row Level Security:** EF creates tables in `public`, which Supabase also exposes through its REST API. The app connects as the database owner and never uses that API, so turn RLS **on with no policies** for every table in a migration
+- **Row Level Security (Supabase; optional on Neon):** EF creates tables in `public`, which Supabase also exposes through its REST API. The app connects as the database owner and never uses that API, so turn RLS **on with no policies** for every table in a migration
   (`ALTER TABLE … ENABLE ROW LEVEL SECURITY`, DDL inside the migration only, no raw SQL in app code). Then the public REST API can read nothing. Test with a read using the anon key: it must return no rows.
 - Seeding is idempotent per table (PLAN.md Phase 1). Data now survives restarts, so a second boot must add no duplicate rows.
 
@@ -21,7 +28,8 @@ Old SQLite-first plan is archived in `docs/archive/DEPLOY.v1.md`.
 | Key | Value | Secret |
 |---|---|---|
 | `ASPNETCORE_ENVIRONMENT` | `Production` | no |
-| `ConnectionStrings__DefaultConnection` | Supabase pooler string | **yes** |
+| `ConnectionStrings__DefaultConnection` | Supabase pooler or Neon pooled string | **yes** |
+| `ConnectionStrings__Migrations` | direct string, only if the pooler breaks `Migrate()` | **yes** |
 | `Clerk__FrontendApi` | from AUTH.md | no |
 | `Clerk__PublishableKey` | from AUTH.md | no |
 | `Clerk__SecretKey` | only if the Backend API fallback is used | **yes** |
@@ -29,6 +37,8 @@ Local: `dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<value>"`
 ```yaml
 envVars:
   - key: ConnectionStrings__DefaultConnection
+    sync: false
+  - key: ConnectionStrings__Migrations
     sync: false
   - key: Clerk__SecretKey
     sync: false

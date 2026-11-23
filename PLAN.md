@@ -1,7 +1,7 @@
 # PLAN.md: system plan (v2)
 
 Branch: `redesign`. Order matters: **make it work (1), sign-in (2), look (3, 4), ship (5)**. A beautiful page with an empty chart loses marks; a plain page with real data does not.
-Decisions (user, 23 Nov 2026): Supabase Postgres for all data, Clerk sign-in plus demo login, new design = `DESIGN.md` v2 and `docs/design-reference/krishi-final-preview.html`.
+Decisions (user, 23 Nov 2026): Postgres for all data (**Supabase or Neon, provider chosen later, code stays provider-agnostic**), Clerk sign-in plus demo login, new design = `DESIGN.md` v2 and `docs/design-reference/krishi-final-preview.html`.
 Project root for code: the folder with `AgriSyncIndia.csproj` (in the zip it is `extracted/MODERN WEB KRISHI/`; in the GitHub repo check where it sits).
 
 ## 0. Known problems (found on the live site, 23 Nov 2026)
@@ -18,15 +18,15 @@ Project root for code: the folder with `AgriSyncIndia.csproj` (in the zip it is 
 | 9 | SQL Server probe in `Program.cs` parses every connection string as SQL Server; old `Migrations/` made for another provider | Provider mix | 1 |
 
 ## Phase 0. Preflight
-- [ ] Clone `github.com/ashutosh48555/krishi-in-sync`, diff against `extracted/`, keep the newer. `git checkout -b redesign`. `dotnet --version` is 10.x, `dotnet build` is green.
+- [x] Cloned `github.com/ashutosh48555/krishi-in-sync` to `Int-402/krishi-in-sync` (identical to `extracted/`), branch `redesign`, `dotnet 10.0.302`, `dotnet build` green (0 errors, 4 warnings). Dockerfile and render.yaml are in the repo.
 - [ ] Install design skills (CLAUDE.md Setup). Confirm they load. Playwright in `tools/`, not in the .NET project.
 - [ ] `docs/` already holds `design-reference/` and `archive/` (old docs). Add `docs/EVIDENCE.md`.
-- [ ] Ask the user for: Supabase pooler string, Clerk Frontend API URL and publishable key (DEPLOY.md, AUTH.md).
+- [ ] User sets secrets themselves (never pasted into chat): `dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<string>"`, `Clerk:FrontendApi`, `Clerk:PublishableKey` (DEPLOY.md, AUTH.md). `gh auth` is broken on this machine (keyring login failed): run `gh auth login` before the push in Phase 5.
 **Check:** app runs with `dotnet run`, dashboard opens.
 
 ## Phase 1. Real data on Supabase (no styling yet)
 Files: `Program.cs`, `Data/DbInitializer.cs`, `Data/AgriSyncDbContext.cs`, `Controllers/ClimateController.cs`, `ViewModels/DashboardViewModel.cs`, `Views/Climate/Dashboard.cshtml`, `Migrations/`, new `Services/IstClock.cs`.
-1. **Provider:** add Npgsql, remove SQL Server package and probe. Postgres when a connection string is set, SQLite otherwise (DEPLOY.md section 1).
+1. **Provider:** add Npgsql, remove SQL Server package and probe. Postgres when a connection string is set (Supabase or Neon, no provider name in code), SQLite otherwise (DEPLOY.md section 1). `Migrate()` uses `ConnectionStrings:Migrations` when present.
 2. **Migrations:** delete old, regenerate `InitialCreate` for Postgres, `Migrate()` at startup, RLS on for every table, data-protection keys table, nullable unique `Users.ClerkUserId`.
 3. **`IstClock.Now`** (`DateTime.SpecifyKind(DateTime.UtcNow.AddHours(5.5), DateTimeKind.Unspecified)`) replaces every `DateTime.UtcNow.AddHours(5.5)`.
 4. **Seeder:** delete the second user block. Seed zones, actuators, rules, logs, alerts each behind `if (!await context.X.AnyAsync())`, saving after each. One try/catch that logs the full exception and **rethrows**.
