@@ -28,7 +28,7 @@ public partial class AccountController : Controller
     }
 
     [HttpGet("Login")]
-    public IActionResult Login(string? returnUrl)
+    public IActionResult Login(string? returnUrl, bool demo = false)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -37,6 +37,7 @@ public partial class AccountController : Controller
 
         ViewData["ReturnUrl"] = returnUrl;
         ViewData["ClerkEnabled"] = _clerk.Enabled;
+        ViewData["Demo"] = demo;
         return View(new LoginViewModel { ReturnUrl = returnUrl });
     }
 

@@ -1,24 +1,21 @@
 @using AgriSyncIndia.Services
 @{
-    ViewData["Title"] = "Signing in - AgriSync India";
+    ViewData["Title"] = Context.T("login.title");
     var clerk = (ClerkOptions)ViewData["Clerk"]!;
     var signOut = ViewData["SignOut"] is true;
 }
-
-<div class="row justify-content-center my-5">
-    <div class="col-12 col-md-6 text-center">
-        <div id="clerk-root"
-             data-signout="@(signOut ? "1" : "0")"
-             data-return-url="@ViewData["ReturnUrl"]"
-             data-session-url="@Url.Action("ClerkSession", "Account")"
-             data-login-url="@Url.Action("Login", "Account")"
-             data-default-url="@Url.Action("Dashboard", "Climate")">
-            @Html.AntiForgeryToken()
-            <p id="clerk-status" class="text-muted" role="status">@(signOut ? "Signing you out" : "Signing you in")</p>
-            <a id="clerk-fallback" class="btn btn-outline-success d-none" href="@Url.Action("Login", "Account")">Back to sign in</a>
-        </div>
+<section class="auth center">
+    <div id="clerk-root"
+         data-signout="@(signOut ? "1" : "0")"
+         data-return-url="@ViewData["ReturnUrl"]"
+         data-session-url="@Url.Action("ClerkSession", "Account")"
+         data-login-url="@Url.Action("Login", "Account")"
+         data-default-url="@Url.Action("Dashboard", "Climate")">
+        @Html.AntiForgeryToken()
+        <p id="clerk-status" class="sub" role="status">@Context.T(signOut ? "clerk.out" : "clerk.in")</p>
+        <a id="clerk-fallback" class="btn sec" href="@Url.Action("Login", "Account")" hidden>@Context.T("clerk.back")</a>
     </div>
-</div>
+</section>
 
 @section Scripts {
     <script defer crossorigin="anonymous" src="@clerk.Issuer/npm/@@clerk/ui@@1/dist/ui.browser.js"></script>

@@ -36,3 +36,15 @@
 - Console: 0 errors. Requests to non-localhost origins: 0 (asserted in script).
 - Theme toggle: light to dark flips `data-theme`, `ks-theme` in localStorage, stage hour 13.00 to 21.50; dark to light returns to 13.00. Initial hour is 13 (light) or 21.5 (dark).
 - Not verified: mid-animation frames of the circular reveal, Safari/Firefox fallback crossfade, `_Icon.cshtml` compile (not built to avoid touching the tree during Phase 2), real touch device.
+
+## Phase 3b: layout, Home, Dashboard, sign-in, CSP
+- Built on branch `p3b` in a separate worktree (another session was using the main tree and stashed this work); `dotnet build -warnaserror` -> 0 Warning(s), 0 Error(s); `dotnet test` -> `Passed: 68` (3 new CSP tests).
+- Fresh SQLite run (no db file), Playwright Chromium (swiftshader). Screenshots looked at: `docs/screens/p3b-{home,dash,login}-{1440,390}-{light,dark}[-full].png`, `p3b-home-1440-toggled-dark.png`. Home matches the reference (two-column hero, lit 3D stage with bar, bento, VPD tracks, direct end labels); Dashboard has header row, headline and advice, zones table, stacked temperature and VPD charts (band shaded), alerts beside them; sign-in is a centred 400px column.
+- Widths 1440, 1024, 768, 390, 320, both themes: no horizontal overflow (checked scrollWidth). Console errors 0, `securitypolicyviolation` events 0, requests to non-localhost origins 0. Only console warnings are swiftshader "GPU stall" messages.
+- CSP: `script-src 'self'; style-src 'self'; font-src 'self' data:` (no unsafe-inline, no jsDelivr, no Google Fonts). Pages have no inline script or style (VPD marker and charts are positioned from JS through the CSSOM).
+- axe-core (bypassing CSP only to inject it) on `/`, `/Climate/Dashboard`, `/Account/Login`, `/Home/Privacy`, 1440 and 390, light and dark: 0 serious or critical after token fixes (`--text-3` light #64655d, dark #8f9288; light `--watch` #92400e).
+- Interaction: zone selection by bar button, table row click, keyboard (Enter and Space on the zone button) and 3D click each update the Selected zone card, table, chart highlight and 3D together. Theme toggle: `data-theme` flips, stage time 13:00 -> 21:30 Night. `?lang=hi` sets `<html lang="hi">`, Hindi headline, cookie keeps it on the next page.
+- Demo login: `/Account/Login?demo=true` prefills; POST -> 302 `/Climate/Dashboard`; Dashboard then shows "Refresh readings".
+- `grep -rnE "cdn\.|googleapis|jsdelivr" Views wwwroot` (outside wwwroot/lib, wwwroot/dev) -> no output.
+- Removed: Bootstrap CSS and JS, Bootstrap Icons, Google Fonts, jQuery from the layout (jQuery plus validation load only through `_ValidationScriptsPartial`, used by FarmCluster/Create), old inline styles/scripts, IST clock, tricolor stripe, tech badges, `_Layout.cshtml.css`. Views not yet restyled (Alerts, Automation, Analytics, Topology, FarmCluster) still use Bootstrap class names and look unstyled until Phase 3c.
+- Not verified: Clerk script CSP needs (style-src may need more when Clerk renders UI), real touch device, Safari/Firefox, Lighthouse, Hindi/Punjabi on every width (320/390 overflow checked in English only plus the Hindi home headline).

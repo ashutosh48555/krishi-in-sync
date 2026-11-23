@@ -4,7 +4,7 @@
     var status = document.getElementById('clerk-status');
     function fail(msg) {
         status.textContent = msg;
-        document.getElementById('clerk-fallback').classList.remove('d-none');
+        document.getElementById('clerk-fallback').hidden = false;
     }
 
     window.addEventListener('load', async function () {

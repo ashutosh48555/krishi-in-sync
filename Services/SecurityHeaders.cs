@@ -3,17 +3,18 @@ namespace AgriSyncIndia.Services;
 public static class SecurityHeaders
 {
     /// <summary>
-    /// ponytail: 'unsafe-inline' plus the jsDelivr / Google Fonts origins are here only because the current
-    /// layout still uses inline scripts/styles and CDN assets. Phase 3 self-hosts them; then drop those four sources.
+    /// Strict policy: all scripts, styles and fonts are self-hosted and the pages carry no inline script or style
+    /// (the VPD marker and charts are positioned from JS through the CSSOM, which CSP allows).
+    /// The Clerk origin is added to script, connect, frame and image sources only when Clerk is configured.
     /// </summary>
     public static string ContentSecurityPolicy(string clerkOrigin)
     {
         var clerk = string.IsNullOrEmpty(clerkOrigin) ? "" : " " + clerkOrigin;
         return string.Join("; ",
             "default-src 'self'",
-            $"script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net{clerk}",
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
-            "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com",
+            $"script-src 'self'{clerk}",
+            "style-src 'self'",
+            "font-src 'self' data:",
             $"img-src 'self' data:{clerk} https://img.clerk.com",
             $"connect-src 'self'{clerk}",
             $"frame-src 'self'{clerk}",

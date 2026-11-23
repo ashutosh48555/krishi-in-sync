@@ -1,84 +1,35 @@
-@model AgriSyncIndia.ViewModels.LoginViewModel
+@model LoginViewModel
 @{
-    ViewData["Title"] = "Sign In - AgriSync India";
+    string T(string k) => Context.T(k);
+    ViewData["Title"] = T("login.title");
+    var demo = ViewData["Demo"] is true;
+    const string demoEmail = "dr.sharma@agrisync.in", demoPass = "AgriSync@123";
 }
+<section class="auth" aria-labelledby="auth-h">
+    <h1 class="sec-title" id="auth-h">@T("login.title")</h1>
+    <p class="sub">@T("login.sub")</p>
 
-<div class="row justify-content-center my-4">
-    <div class="col-12 col-md-8 col-lg-5">
-        <div class="card card-agri p-4 p-md-5 border-0 shadow">
-            
-            <!-- Branding Header -->
-            <div class="text-center mb-4">
-                <div class="d-inline-flex p-3 bg-success bg-opacity-10 rounded-circle text-success mb-2">
-                    <i class="bi bi-shield-lock-fill fs-2"></i>
-                </div>
-                <h3 class="fw-bold text-dark mb-1">Sign In to AgriSync</h3>
-                <p class="text-muted small">Agro-Meteorological Telemetry & Smart Automation Portal</p>
-            </div>
+    @if (ViewData["ClerkEnabled"] is true)
+    {
+        <a asp-controller="Account" asp-action="ClerkCallback" asp-route-returnUrl="@ViewData["ReturnUrl"]" class="btn full">@await Html.Icon("user", 16)@T("login.clerk")</a>
+        <p class="divider"><span>@T("login.or")</span></p>
+    }
 
-            @if (ViewData["ClerkEnabled"] is true)
-            {
-                <a asp-controller="Account" asp-action="ClerkCallback" asp-route-returnUrl="@ViewData["ReturnUrl"]"
-                   class="btn btn-success w-100 py-2 fw-semibold shadow-sm mb-3">
-                    <i class="bi bi-person-check me-1"></i> Continue with Clerk
-                </a>
-                <div class="text-center text-muted small mb-3">or use the demo account</div>
-            }
-
-            <!-- Demo Credentials Helper Banner -->
-            <div class="alert alert-light border small text-muted p-2 mb-4 d-flex align-items-center">
-                <i class="bi bi-info-circle-fill text-success fs-5 me-2"></i>
-                <div>
-                    <strong class="text-dark d-block">Demo Agronomist Access:</strong>
-                    Email: <code class="text-dark fw-bold">dr.sharma@agrisync.in</code> | Pass: <code class="text-dark fw-bold">AgriSync@123</code>
-                </div>
-            </div>
-
-            <form asp-controller="Account" asp-action="Login" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" asp-for="ReturnUrl" />
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-3"></div>
-
-                <!-- Email Input -->
-                <div class="mb-3">
-                    <label asp-for="Email" class="form-label small fw-semibold text-muted"></label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-envelope"></i></span>
-                        <input asp-for="Email" class="form-control border-start-0" placeholder="name@icar.gov.in" autocomplete="username" />
-                    </div>
-                    <span asp-validation-for="Email" class="text-danger small"></span>
-                </div>
-
-                <!-- Password Input -->
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <label asp-for="Password" class="form-label small fw-semibold text-muted"></label>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-key"></i></span>
-                        <input asp-for="Password" class="form-control border-start-0" type="password" placeholder="••••••••" autocomplete="current-password" />
-                    </div>
-                    <span asp-validation-for="Password" class="text-danger small"></span>
-                </div>
-
-                <!-- Remember Me Checkbox -->
-                <div class="form-check mb-4">
-                    <input asp-for="RememberMe" class="form-check-input" type="checkbox" id="rememberMeCheck" />
-                    <label class="form-check-label small text-muted" for="rememberMeCheck">
-                        Keep me signed in on this workstation
-                    </label>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit" class="btn btn-success w-100 py-2 fw-semibold shadow-sm mb-3">
-                    <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Smart Farm
-                </button>
-            </form>
-
+    <form asp-controller="Account" asp-action="Login" method="post">
+        <input type="hidden" asp-for="ReturnUrl" />
+        <div asp-validation-summary="ModelOnly" class="err form-err" role="alert"></div>
+        <div class="field">
+            <label for="Email">@T("login.email")</label>
+            <input id="Email" name="Email" type="email" required autocomplete="username" value="@(demo ? demoEmail : Model.Email)" aria-describedby="Email-err" />
+            <span asp-validation-for="Email" class="err" id="Email-err"></span>
         </div>
-    </div>
-</div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+        <div class="field">
+            <label for="Password">@T("login.password")</label>
+            <input id="Password" name="Password" type="password" required autocomplete="current-password" value="@(demo ? demoPass : null)" aria-describedby="Password-err" />
+            <span asp-validation-for="Password" class="err" id="Password-err"></span>
+        </div>
+        <label class="check"><input asp-for="RememberMe" type="checkbox" />@T("login.remember")</label>
+        <button type="submit" class="btn full">@T("login.submit")</button>
+    </form>
+    <p class="note demo-note">@Context.T("login.demo", demoEmail, demoPass)</p>
+</section>

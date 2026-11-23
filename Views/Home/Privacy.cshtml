@@ -1,6 +1,13 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
+@{
+    string T(string k) => Context.T(k);
+    ViewData["Title"] = T("pv.title");
 }
-<h1>@ViewData["Title"]</h1>
-
-<p>Use this page to detail your site's privacy policy.</p>
+<article class="prose">
+    <h1 class="sec-title">@T("pv.title")</h1>
+    <p class="lead">@T("pv.intro")</p>
+    <h2>@T("pv.h1")</h2><p>@T("pv.p1")</p>
+    <h2>@T("pv.h2")</h2><p>@T("pv.p2")</p>
+    <h2>@T("pv.h3")</h2><p>@T("pv.p3")</p>
+    <h2>@T("pv.h4")</h2><p>@T("pv.p4")</p>
+    <h2>@T("pv.h5")</h2><p>@T("pv.p5")</p>
+</article>
