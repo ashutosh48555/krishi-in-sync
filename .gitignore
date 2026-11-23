@@ -19,3 +19,6 @@ App_Data/DataProtection-Keys/
 *.user
 
 tests/**/TestResults/
+
+# local static smoke pages
+wwwroot/dev/

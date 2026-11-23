@@ -1,0 +1,12 @@
+/* Theme switch: circular reveal via View Transitions (theme.js sets --cx, --cy, animates --r). */
+@property --r { syntax: "<length>"; inherits: true; initial-value: 0px; }
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) {
+  z-index: 2;
+  -webkit-mask-image: radial-gradient(circle at var(--cx, 50%) var(--cy, 50%), #000 calc(var(--r) - 160px), transparent var(--r));
+  mask-image: radial-gradient(circle at var(--cx, 50%) var(--cy, 50%), #000 calc(var(--r) - 160px), transparent var(--r));
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}

@@ -1,0 +1,103 @@
+/* Design tokens (DESIGN.md section 3). Components use these only, never literal colours. */
+:root {
+  --bg: #fafaf9;
+  --surface: #ffffff;
+  --surface-2: #f4f4f2;
+  --line: #e7e6e2;
+  --line-2: #d3d1ca;
+  --text: #12130f;
+  --text-2: #55564f;
+  --text-3: #7a7b72;
+  --accent: #15803d;
+  --on-accent: #ffffff;
+  --accent-soft: #e7f4eb;
+  --watch: #b45309;
+  --crit: #b42318;
+  --s1: #2a78d6; /* chart series, fixed order: Open Field, Polyhouse, Drip */
+  --s2: #eb6834;
+  --s3: #1baf7a;
+
+  --f-d:
+    "Inter Tight", "Noto Sans Devanagari", "Noto Sans Gurmukhi", system-ui,
+    sans-serif;
+  --f-b:
+    "Inter", "Noto Sans Devanagari", "Noto Sans Gurmukhi", system-ui, sans-serif;
+
+  /* spacing, 4px base */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --gap: 14px;
+  --gutter: max(16px, env(safe-area-inset-left, 0px));
+  --frame: 1240px;
+
+  /* radii */
+  --r-card: 16px;
+  --r-stage: 28px;
+  --r-pill: 999px;
+  --r-input: 10px;
+  --r-row: 0;
+
+  /* type scale */
+  --fs-body: 15.5px;
+  --fs-sm: 13.5px;
+  --fs-xs: 12.5px;
+  --fs-card: 13px;
+  --fs-lead: 18px;
+  --fs-title: 28px;
+  --fs-metric: 30px;
+  --fs-h1: clamp(34px, 4.6vw, 56px);
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.3, 1.4, 0.5, 1);
+
+  /* no shadows anywhere (flat, hairline cards) */
+  --shadow: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0b0a;
+    --surface: #121412;
+    --surface-2: #1a1d1a;
+    --line: #242724;
+    --line-2: #363a36;
+    --text: #f3f4f1;
+    --text-2: #a6a99f;
+    --text-3: #7d8077;
+    --accent: #4ade80;
+    --on-accent: #052e16;
+    --accent-soft: rgba(74, 222, 128, 0.12);
+    --watch: #fbbf24;
+    --crit: #f87171;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0a0b0a;
+  --surface: #121412;
+  --surface-2: #1a1d1a;
+  --line: #242724;
+  --line-2: #363a36;
+  --text: #f3f4f1;
+  --text-2: #a6a99f;
+  --text-3: #7d8077;
+  --accent: #4ade80;
+  --on-accent: #052e16;
+  --accent-soft: rgba(74, 222, 128, 0.12);
+  --watch: #fbbf24;
+  --crit: #f87171;
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  color-scheme: dark;
+}

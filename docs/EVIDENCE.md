@@ -29,3 +29,10 @@
 - Ownership: `AutomationRule.OwnerUserId` (migration `AddRuleOwner`); non-owner Viewer gets 404 on delete/toggle, owner succeeds, Farm Manager / Agronomist succeed; actuator toggle and alert acknowledge need an operator role.
 - `dotnet build -warnaserror` -> 0 warnings; `dotnet test` -> `Passed: 65`. Fresh SQLite run: `/Automation` 200, `/healthz` 200.
 - Not verified: migration applied to a real Postgres; `email_verified` claim name in a real Clerk token; browser flow as a Clerk Viewer.
+
+## Phase 3a: design foundation (assets, tokens, theme, 3D module, icons)
+- Static smoke page `wwwroot/dev/foundation.html` (git-ignored) served with `python3 -m http.server`, driven by Playwright Chromium (swiftshader WebGL).
+- Screenshots (looked at, match the reference): `docs/screens/foundation-{1440,390}-{light,dark}.png`, plus `-full` and `-toggled` variants. Light: blue sky, sun disc, rays, clouds, three plots, pins, glass bar. Dark: stars, moon, night grade, polyhouse lamp glow.
+- Console: 0 errors. Requests to non-localhost origins: 0 (asserted in script).
+- Theme toggle: light to dark flips `data-theme`, `ks-theme` in localStorage, stage hour 13.00 to 21.50; dark to light returns to 13.00. Initial hour is 13 (light) or 21.5 (dark).
+- Not verified: mid-animation frames of the circular reveal, Safari/Firefox fallback crossfade, `_Icon.cshtml` compile (not built to avoid touching the tree during Phase 2), real touch device.
