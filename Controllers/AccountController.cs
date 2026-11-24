@@ -88,7 +88,7 @@ public partial class AccountController : Controller
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, UserProvisioning.BuildPrincipal(user), authProperties);
 
         _logger.LogInformation("Password sign-in succeeded for user {UserId}.", user.UserId);
-        TempData["SuccessMessage"] = $"Welcome back, {user.FullName}! Logged in as {user.Role}.";
+        TempData["SuccessMessage"] = string.Format(Localizer.T(HttpContext.Lang(), "toast.login.welcome"), user.FullName, user.Role);
 
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
@@ -105,7 +105,7 @@ public partial class AccountController : Controller
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         if (_clerk.Enabled) return RedirectToAction(nameof(ClerkCallback), new { signOut = true });
-        TempData["SuccessMessage"] = "You have been logged out safely.";
+        TempData["SuccessMessage"] = Localizer.T(HttpContext.Lang(), "toast.logout");
         return RedirectToAction(nameof(Login));
     }
 }

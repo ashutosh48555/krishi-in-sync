@@ -28,7 +28,7 @@
     <span id="search-count" class="search-count" aria-live="polite"></span>
     @if (Model.CanAcknowledge && Model.Alerts.Any(a => !a.IsAcknowledged))
     {
-        <form asp-action="AcknowledgeAll" method="post" data-confirm="Acknowledge all open alerts in this view?">
+        <form asp-action="AcknowledgeAll" method="post" data-confirm="@T("al.ackall.confirm")">
             <input type="hidden" name="filter" value="@Model.Filter" />
             <button type="submit" class="btn sec sm">@await Html.Icon("check-check", 14)@T("al.ackall")</button>
         </form>
@@ -36,7 +36,7 @@
 </div>
 
 <section class="card c12 listcard">
-    <div id="alert-no-match" class="al" hidden><span class="ico watch">@await Html.Icon("triangle-alert")</span><div><b>No matching alerts found</b><span>Try searching with another keyword.</span></div></div>
+    <div id="alert-no-match" class="al" hidden><span class="ico watch">@await Html.Icon("triangle-alert")</span><div><b>@T("al.nomatch")</b><span>@T("al.nomatch.sub")</span></div></div>
     @if (Model.Alerts.Count == 0)
     {
         <div class="al"><span class="ico good">@await Html.Icon("check")</span><div><b>@T("a.empty")</b></div></div>

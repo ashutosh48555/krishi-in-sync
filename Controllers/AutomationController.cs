@@ -136,7 +136,7 @@ public class AutomationController : Controller
             await weather.EvaluateAutomationRulesAsync(new List<SensorLog> { anomalyLog });
         }
 
-        TempData["SuccessMessage"] = "Microclimate anomaly simulated! High humidity (89%) logged: rules evaluated & actuators engaged.";
+        Flash("au.t.anomaly");
         return RedirectToAction(nameof(Index));
     }
 }

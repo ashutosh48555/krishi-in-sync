@@ -40,7 +40,7 @@ public partial class ClimateController : Controller
     {
         if (!Permissions.IsOperator(User) || !await _context.Actuators.AnyAsync(a => a.ActuatorId == actuatorId)) return NotFound();
         await _weatherService.ToggleActuatorAsync(actuatorId);
-        TempData["SuccessMessage"] = $"Actuator #{actuatorId} status successfully toggled.";
+        TempData["SuccessMessage"] = string.Format(Localizer.T(HttpContext.Lang(), "toast.act.toggled"), actuatorId);
 
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
@@ -60,14 +60,14 @@ public partial class ClimateController : Controller
         {
             var logs = await _weatherService.IngestAndSyncTelemetryAsync();
             if (logs.Count > 0)
-                TempData["SuccessMessage"] = $"Readings refreshed from Open-Meteo for {logs.Count} zones.";
+                TempData["SuccessMessage"] = string.Format(Localizer.T(HttpContext.Lang(), "toast.weather.refreshed"), logs.Count);
             else
-                TempData["ErrorMessage"] = "Could not reach Open-Meteo. Showing the last stored readings. Try again in a minute.";
+                TempData["ErrorMessage"] = Localizer.T(HttpContext.Lang(), "toast.weather.err");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error refreshing telemetry");
-            TempData["ErrorMessage"] = "Could not refresh readings. Showing the last stored readings. Try again in a minute.";
+            TempData["ErrorMessage"] = Localizer.T(HttpContext.Lang(), "toast.weather.err");
         }
 
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
