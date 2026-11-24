@@ -21,8 +21,5 @@ node_modules/
 # Node-only tooling the runtime image does not need
 tools/
 tests/
-hello.ts
-telemetry.ts
-neon.ts
 package.json
 package-lock.json
