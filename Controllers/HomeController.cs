@@ -7,8 +7,8 @@ namespace AgriSyncIndia.Controllers;
 
 public class HomeController : Controller
 {
-    public async Task<IActionResult> Index([FromServices] DashboardViewModelBuilder builder)
-        => View(await builder.BuildAsync(HttpContext.Lang(), null, HttpContext));
+    public async Task<IActionResult> Index([FromServices] DashboardViewModelBuilder builder, string? farm = null)
+        => View(await builder.BuildAsync(HttpContext.Lang(), farm, HttpContext));
 
     public IActionResult Privacy() => View();
 

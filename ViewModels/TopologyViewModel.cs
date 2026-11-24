@@ -5,6 +5,9 @@ public class TopologyViewModel
 {
     public string CurrentLanguage { get; set; } = "en";
     public bool CanToggle { get; set; }
+    public string SelectedFarm { get; set; } = string.Empty;
+    public string SelectedRegion { get; set; } = string.Empty;
+    public List<string> AvailableFarms { get; set; } = new();
     public List<TopoZone> Zones { get; set; } = new();
 }
 

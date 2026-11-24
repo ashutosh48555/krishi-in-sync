@@ -36,4 +36,5 @@ public class FarmClusterListViewModel
 {
     public List<FarmCluster> Clusters { get; set; } = new();
     public int ZoneCount { get; set; }
+    public string ActiveFarm { get; set; } = string.Empty;
 }

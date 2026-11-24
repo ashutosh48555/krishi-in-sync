@@ -26,7 +26,7 @@
         {
             <form method="get" class="farmsel" id="farmForm">
                 <label class="sr-only" for="farm">@T("dash.farm")</label>
-                <select id="farm" name="farm" onchange="this.form.submit()">
+                <select id="farm" name="farm" data-auto-submit="true">
                     @foreach (var f in Model.AvailableFarms) { <option value="@f" selected="@(f == Model.SelectedFarm)">@f</option> }
                 </select>
                 <noscript><button type="submit" class="btn sec sm">@T("dash.apply")</button></noscript>

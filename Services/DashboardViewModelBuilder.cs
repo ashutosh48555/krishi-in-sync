@@ -54,6 +54,20 @@ public class DashboardViewModelBuilder
         string place = !string.IsNullOrWhiteSpace(selectedCluster?.Region) ? selectedCluster.Region
             : (selected.Contains(" - ") ? selected[(selected.LastIndexOf(" - ", StringComparison.Ordinal) + 3)..] : selected);
 
+        // When user explicitly passes farm parameter or telemetry is stale, immediately ingest live telemetry for cluster coordinates
+        bool isExplicitFarm = !string.IsNullOrEmpty(farm);
+        var newestLog = await _context.SensorLogs.OrderByDescending(l => l.TimestampIST).FirstOrDefaultAsync();
+        bool isTelemetryStale = newestLog == null || (nowIst - newestLog.TimestampIST).TotalMinutes > 15;
+
+        if (isExplicitFarm || isTelemetryStale)
+        {
+            try
+            {
+                await _weather.IngestAndSyncTelemetryAsync(selectedCluster?.Latitude, selectedCluster?.Longitude);
+            }
+            catch { /* non-blocking fallback to stored logs */ }
+        }
+
         var vm = new DashboardViewModel
         {
             CurrentLanguage = lang,

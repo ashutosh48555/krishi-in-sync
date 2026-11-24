@@ -87,6 +87,20 @@ public partial class AccountController : Controller
 
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, UserProvisioning.BuildPrincipal(user), authProperties);
 
+        if (!string.IsNullOrWhiteSpace(user.AffiliatedFarmCluster))
+        {
+            try
+            {
+                Response.Cookies.Append("krishi_farm", user.AffiliatedFarmCluster, new CookieOptions
+                {
+                    Expires = DateTimeOffset.UtcNow.AddDays(30),
+                    SameSite = SameSiteMode.Lax,
+                    HttpOnly = true
+                });
+            }
+            catch { /* Ignore if headers sent */ }
+        }
+
         _logger.LogInformation("Password sign-in succeeded for user {UserId}.", user.UserId);
         TempData["SuccessMessage"] = string.Format(Localizer.T(HttpContext.Lang(), "toast.login.welcome"), user.FullName, user.Role);
 
@@ -154,6 +168,20 @@ public partial class AccountController : Controller
         };
 
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, UserProvisioning.BuildPrincipal(user), authProperties);
+
+        if (!string.IsNullOrWhiteSpace(user.AffiliatedFarmCluster))
+        {
+            try
+            {
+                Response.Cookies.Append("krishi_farm", user.AffiliatedFarmCluster, new CookieOptions
+                {
+                    Expires = DateTimeOffset.UtcNow.AddDays(30),
+                    SameSite = SameSiteMode.Lax,
+                    HttpOnly = true
+                });
+            }
+            catch { /* Ignore if headers sent */ }
+        }
 
         _logger.LogInformation("New user registered successfully: {UserId} ({Email})", user.UserId, user.Email);
         TempData["SuccessMessage"] = string.Format(Localizer.T(HttpContext.Lang(), "toast.register.welcome"), user.FullName);

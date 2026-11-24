@@ -32,10 +32,12 @@ public sealed class WeatherPollingBackgroundService : BackgroundService
             try
             {
                 using var scope = _scopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<AgriSyncIndia.Data.AgriSyncDbContext>();
                 var weatherService = scope.ServiceProvider.GetRequiredService<IOpenMeteoService>();
-                var logs = await weatherService.IngestAndSyncTelemetryAsync();
-                _logger.LogInformation("Autonomous background weather sync: {Count} zone logs recorded at {Time} IST.",
-                    logs.Count, IstClock.Now.ToString("HH:mm:ss"));
+                var primaryCluster = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(db.FarmClusters, stoppingToken);
+                var logs = await weatherService.IngestAndSyncTelemetryAsync(primaryCluster?.Latitude, primaryCluster?.Longitude);
+                _logger.LogInformation("Autonomous background weather sync: {Count} zone logs recorded for {Cluster} at {Time} IST.",
+                    logs.Count, primaryCluster?.Name ?? "Primary Cluster", IstClock.Now.ToString("HH:mm:ss"));
             }
             catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {

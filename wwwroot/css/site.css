@@ -13,8 +13,10 @@ h1, h2, h3 { margin: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* nav */
 nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; align-items: center; gap: 8px; padding: 12px 0; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
-.brand { display: flex; align-items: center; gap: 9px; font: 600 17px var(--f-d); color: var(--text); text-decoration: none; margin-right: 20px; letter-spacing: -0.01em; }
+.brand { display: flex; align-items: center; gap: 9px; font: 600 17px var(--f-d); color: var(--text); text-decoration: none; margin-right: 12px; letter-spacing: -0.01em; }
 .brand .lg { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; }
+.nav-loc { display: inline-flex; align-items: center; gap: 5px; text-decoration: none; font: 500 12px var(--f-b); padding: 4px 10px; border-radius: var(--r-pill); background: var(--surface); border: 1px solid var(--line); color: var(--text-2); transition: border-color 0.2s, color 0.2s; white-space: nowrap; margin-right: 12px; }
+.nav-loc:hover { border-color: var(--accent); color: var(--text); }
 .links { display: flex; gap: 2px; margin-right: auto; }
 .links a { font: 500 14px var(--f-b); color: var(--text-2); text-decoration: none; padding: 7px 12px; border-radius: 8px; white-space: nowrap; transition: background-color 0.2s, color 0.2s; }
 .links a:hover, .links a.on { background: var(--surface-2); color: var(--text); }

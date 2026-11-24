@@ -11,9 +11,16 @@
     var name = user?.Identity?.Name ?? "";
     var initial = name.Length > 0 ? name.TrimStart().Substring(0, 1).ToUpperInvariant() : "?";
     var langs = new[] { ("en", "EN"), ("hi", "हिं"), ("pa", "ਪੰ") };
+    var queryFarm = Context.Request.Query["farm"].ToString();
+    var cookieFarm = !string.IsNullOrEmpty(queryFarm) ? queryFarm : Context.Request.Cookies["krishi_farm"];
+    var locBadge = !string.IsNullOrEmpty(cookieFarm)
+        ? (cookieFarm.Contains(" - ") ? cookieFarm[(cookieFarm.LastIndexOf(" - ", StringComparison.Ordinal) + 3)..]
+           : (cookieFarm.Contains("Punjab") ? "Punjab" : cookieFarm.Contains("Haryana") ? "Haryana" : cookieFarm.Contains("Nagpur") || cookieFarm.Contains("Maharashtra") ? "Maharashtra" : "Delhi"))
+        : "Delhi";
 }
 <nav aria-label="@Context.T("nav.main")">
     <a class="brand" asp-controller="Home" asp-action="Index"><span class="lg">@await Html.Icon("sprout", 17)</span><span class="bn">Krishi Sync</span></a>
+    <a asp-controller="FarmCluster" asp-action="Index" class="chip xs nm nav-loc" title="@cookieFarm">@await Html.Icon("map-pin", 12)<span>@locBadge</span></a>
     <div class="links">
         <a asp-controller="Climate" asp-action="Dashboard" class="@(dashboardOn ? "on" : null)" aria-current="@(dashboardOn ? "page" : null)">@Context.T("nav.dashboard")</a>
         <a asp-controller="Climate" asp-action="Topology" class="@(zonesOn ? "on" : null)" aria-current="@(zonesOn ? "page" : null)">@Context.T("nav.zones")</a>

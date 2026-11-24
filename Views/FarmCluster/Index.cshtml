@@ -45,15 +45,22 @@
                 <tbody>
                     @foreach (var c in Model.Clusters)
                     {
-                        <tr>
-                            <th scope="row"><b>@c.Name</b></th>
+                        var isActive = c.Name == Model.ActiveFarm;
+                        <tr class="@(isActive ? "on" : null)">
+                            <th scope="row">
+                                <b>@c.Name</b>
+                                @if (isActive)
+                                {
+                                    <span class="chip xs on" style="margin-left: 8px;">Active</span>
+                                }
+                            </th>
                             <td>@c.Region</td>
                             <td class="n">@string.Format(T("cl.acres"), ViewFormat.N(c.TotalAcreage, 1))</td>
                             <td class="sub n">@c.Latitude.ToString("0.0000")°N, @c.Longitude.ToString("0.0000")°E</td>
                             <td>@c.PrimaryCrops</td>
                             <td class="text-end">
-                                <a asp-controller="Climate" asp-action="Dashboard" asp-route-farm="@c.Name" class="btn sec sm">
-                                    @await Html.Icon("arrow-right", 14)@T("cl.open")
+                                <a asp-controller="Climate" asp-action="Dashboard" asp-route-farm="@c.Name" class="btn @(isActive ? "sec" : "pri") sm">
+                                    @await Html.Icon(isActive ? "check" : "arrow-right", 14)@(isActive ? "Current Farm" : T("cl.open"))
                                 </a>
                             </td>
                         </tr>

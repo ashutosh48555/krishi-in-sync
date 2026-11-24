@@ -147,4 +147,11 @@
       if (passInput && pass) passInput.value = pass;
     });
   });
+
+  // 10. Farm Location Selector auto-submit on change (CSP-compliant without inline onchange)
+  document.querySelectorAll(".farmsel select, select[data-auto-submit]").forEach(function (sel) {
+    sel.addEventListener("change", function () {
+      if (sel.form) sel.form.submit();
+    });
+  });
 })();

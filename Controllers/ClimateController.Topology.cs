@@ -10,12 +10,51 @@ public partial class ClimateController
 {
     /// <summary>Zones (/Climate/Topology): one card per DB zone with its latest reading (last 3 hours) and actuators.</summary>
     [HttpGet("Topology")]
-    public async Task<IActionResult> Topology()
+    public async Task<IActionResult> Topology(string? farm = null)
     {
         var lang = HttpContext.Lang();
+        var clusters = await _context.FarmClusters.AsNoTracking().OrderBy(c => c.ClusterId).ToListAsync();
+        var farms = clusters.Select(c => c.Name).ToList();
+        if (farms.Count == 0) farms.Add("IARI Pusa Smart Farm - New Delhi");
+
+        string? cookieFarm = Request.Cookies["krishi_farm"];
+        var selected = !string.IsNullOrEmpty(farm) && farms.Contains(farm) ? farm
+            : (!string.IsNullOrEmpty(cookieFarm) && farms.Contains(cookieFarm) ? cookieFarm : farms[0]);
+
+        if (!string.IsNullOrEmpty(selected))
+        {
+            try
+            {
+                Response.Cookies.Append("krishi_farm", selected, new CookieOptions
+                {
+                    Expires = DateTimeOffset.UtcNow.AddDays(30),
+                    SameSite = SameSiteMode.Lax,
+                    HttpOnly = true
+                });
+            }
+            catch { /* Ignore if headers sent */ }
+        }
+
+        var selectedCluster = clusters.FirstOrDefault(c => c.Name == selected);
+        if (!string.IsNullOrEmpty(farm))
+        {
+            try
+            {
+                await _weatherService.IngestAndSyncTelemetryAsync(selectedCluster?.Latitude, selectedCluster?.Longitude);
+            }
+            catch { /* fallback */ }
+        }
+
         var cutoff = IstClock.Now.AddHours(-ClimateRules.NoReadingAfterHours);
         var zones = await _context.Zones.Include(z => z.Actuators).AsNoTracking().OrderBy(z => z.ZoneId).ToListAsync();
-        var vm = new TopologyViewModel { CurrentLanguage = lang, CanToggle = Permissions.IsOperator(User) };
+        var vm = new TopologyViewModel
+        {
+            CurrentLanguage = lang,
+            CanToggle = Permissions.IsOperator(User),
+            SelectedFarm = selected,
+            SelectedRegion = selectedCluster?.Region ?? string.Empty,
+            AvailableFarms = farms
+        };
 
         foreach (var z in zones)
         {

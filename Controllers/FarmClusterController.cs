@@ -22,11 +22,20 @@ public class FarmClusterController : Controller
 
     [HttpGet]
     [HttpGet("Index")]
-    public async Task<IActionResult> Index() => View(new FarmClusterListViewModel
+    public async Task<IActionResult> Index()
     {
-        Clusters = await _context.FarmClusters.AsNoTracking().OrderByDescending(c => c.ClusterId).ToListAsync(),
-        ZoneCount = await _context.Zones.CountAsync()
-    });
+        var clusters = await _context.FarmClusters.AsNoTracking().OrderByDescending(c => c.ClusterId).ToListAsync();
+        string? cookieFarm = Request.Cookies["krishi_farm"];
+        string active = !string.IsNullOrEmpty(cookieFarm) && clusters.Any(c => c.Name == cookieFarm) ? cookieFarm
+            : (clusters.Count > 0 ? clusters[0].Name : "IARI Pusa Smart Farm - New Delhi");
+
+        return View(new FarmClusterListViewModel
+        {
+            Clusters = clusters,
+            ZoneCount = await _context.Zones.CountAsync(),
+            ActiveFarm = active
+        });
+    }
 
     [HttpGet("Create")]
     [Authorize]
