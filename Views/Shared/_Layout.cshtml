@@ -43,7 +43,10 @@
         </main>
         <footer>
             <span>@Context.T("foot.text")</span>
-            <a asp-controller="Home" asp-action="Privacy">@Context.T("foot.privacy")</a>
+            <div class="foot-links">
+                <a href="/swagger" target="_blank" rel="noopener">@await Html.Icon("cpu", 14)<span>API (Swagger)</span></a>
+                <a asp-controller="Home" asp-action="Privacy">@Context.T("foot.privacy")</a>
+            </div>
         </footer>
     </div>
     <partial name="_VpdModal" />

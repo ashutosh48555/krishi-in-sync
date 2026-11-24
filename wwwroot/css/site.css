@@ -141,6 +141,9 @@ select:focus, .farmsel select:focus, select.inp:focus, .field select:focus {
 .field .err { display: flex; gap: 6px; align-items: center; color: var(--crit); font-size: 13px; }
 footer { padding: 36px 0 44px; font-size: var(--fs-sm); color: var(--text-3); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 footer a { color: inherit; }
+.foot-links { display: flex; align-items: center; gap: 18px; }
+.foot-links a { display: inline-flex; align-items: center; gap: 6px; }
+.foot-links a:hover { color: var(--accent); }
 .dot.off { background: var(--watch); animation: none; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); } 70% { box-shadow: 0 0 0 8px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 

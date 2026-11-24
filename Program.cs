@@ -90,6 +90,21 @@ builder.Services.AddHttpClient("OpenMeteoClient", client =>
 builder.Services.AddScoped<IOpenMeteoService, OpenMeteoService>();
 builder.Services.AddScoped<DashboardViewModelBuilder>();
 
+// Autonomous background telemetry polling (IHostedService)
+builder.Services.AddHostedService<WeatherPollingBackgroundService>();
+
+// Swagger / OpenAPI documentation (INT402 Unit 6 & 7 / CO6)
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
+    {
+        Title = "Krishi Sync RESTful Web API",
+        Version = "v1",
+        Description = "Agricultural microclimate zones, telemetry, and automated rules API (CO6)."
+    });
+});
+
 // Postgres when a connection string is set, otherwise a local SQLite file.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 bool usePostgres = !string.IsNullOrWhiteSpace(connectionString);
@@ -145,6 +160,13 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Krishi Sync REST API v1");
+    c.RoutePrefix = "swagger";
+});
+
 var clerkOrigin = app.Services.GetRequiredService<ClerkOptions>().Issuer;
 var neonPublicOptions = app.Services.GetRequiredService<NeonOptions>();
 var csp = SecurityHeaders.ContentSecurityPolicy(
@@ -153,11 +175,14 @@ var csp = SecurityHeaders.ContentSecurityPolicy(
     SecurityHeaders.Origin(neonPublicOptions.TelemetryUrl));
 app.Use(async (ctx, next) =>
 {
-    var h = ctx.Response.Headers;
-    h["Content-Security-Policy"] = csp;
-    h["X-Content-Type-Options"] = "nosniff";
-    h["Referrer-Policy"] = "strict-origin-when-cross-origin";
-    h["X-Frame-Options"] = "DENY";
+    if (!ctx.Request.Path.StartsWithSegments("/swagger"))
+    {
+        var h = ctx.Response.Headers;
+        h["Content-Security-Policy"] = csp;
+        h["X-Content-Type-Options"] = "nosniff";
+        h["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        h["X-Frame-Options"] = "DENY";
+    }
     await next();
 });
 
