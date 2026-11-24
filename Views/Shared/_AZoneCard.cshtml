@@ -7,7 +7,7 @@
     string T(string k) => Localizer.T(lang, k);
     var tone = ViewFormat.Tone(c.VpdBand);
 }
-<article class="card zc" id="zone-@c.Key" tabindex="-1" aria-labelledby="zh-@c.Key">
+<article class="card zc" id="zone-@c.Key" data-zone-id="@c.ZoneId" tabindex="-1" aria-labelledby="zh-@c.Key">
     <div class="zhd">
         <h2 class="zt" id="zh-@c.Key">@c.DisplayName</h2>
         @if (c.HasReading)
@@ -26,17 +26,17 @@
         <div class="zmets">
             <div class="met">
                 <div class="k">@await Html.Icon("thermometer", 16)@T("m.temp")</div>
-                <div class="v">@ViewFormat.N(c.Temp)<small>°C</small></div>
+                <div class="v"><span data-live="temp">@ViewFormat.N(c.Temp)</span><small>°C</small></div>
                 <small class="an">@string.Format(T("m.target"), ViewFormat.N(c.TargetTemp) + " °C") · @ViewFormat.Gap(lang, c)</small>
             </div>
             <div class="met">
                 <div class="k">@await Html.Icon("droplet", 16)@T("m.hum")</div>
-                <div class="v">@ViewFormat.N(c.Humidity, 0)<small>%</small></div>
+                <div class="v"><span data-live="hum">@ViewFormat.N(c.Humidity, 0)</span><small>%</small></div>
                 <small class="an">@string.Format(T("m.target"), ViewFormat.N(c.TargetHumidity, 0) + " %")</small>
             </div>
         </div>
         <div class="zvpd">
-            <div class="k">@await Html.Icon("wind", 16)<span>@T("m.vpdhead")</span><b>@ViewFormat.N(c.Vpd, 2)</b></div>
+            <div class="k">@await Html.Icon("wind", 16)<span>@T("m.vpdhead")</span><b data-live="vpd">@ViewFormat.N(c.Vpd, 2)</b></div>
             <partial name="_VpdTrack" model="c.Vpd" />
         </div>
         <p class="an">@string.Format(T("z.last"), Model.LastReading)</p>
@@ -48,28 +48,32 @@
     }
 
     <h3 class="ah">@T("z.actuators")<span class="sim">@T("m.simulated")</span></h3>
-    @if (Model.Actuators.Count == 0)
-    {
-        <p class="an">@T("z.noact")</p>
-    }
-    else
-    {
-        <ul class="acts">
-            @foreach (var a in Model.Actuators)
-            {
-                <li>
-                    <span class="an-n">@a.Name<small>@a.DeviceType · @T(a.Auto ? "z.auto" : "z.manual")</small></span>
-                    <span class="st @(a.On ? "" : "mute")">@await Html.Icon("power", 14)@T(a.On ? "m.on" : "m.off")</span>
-                    @if (canToggle)
-                    {
-                        <form asp-controller="Climate" asp-action="ToggleActuator" method="post">
-                            <input type="hidden" name="actuatorId" value="@a.Id" />
-                            <input type="hidden" name="returnUrl" value="@Url.Action("Topology", "Climate")" />
-                            <button type="submit" class="btn sec sm" aria-label="@T(a.On ? "z.turnoff" : "z.turnon") @a.Name">@T(a.On ? "z.turnoff" : "z.turnon")</button>
-                        </form>
-                    }
-                </li>
-            }
-        </ul>
-    }
+    <div class="acts-area">
+        @if (Model.Actuators.Count == 0)
+        {
+            <p class="an an-empty">@T("z.noact")</p>
+        }
+        else
+        {
+            <ul class="acts">
+                @foreach (var a in Model.Actuators)
+                {
+                    <li>
+                        <span class="an-n">@a.Name<small>@a.DeviceType · @T(a.Auto ? "z.auto" : "z.manual")</small></span>
+                        <div class="act-controls">
+                            <span class="st @(a.On ? "" : "mute")">@await Html.Icon("power", 14)@T(a.On ? "m.on" : "m.off")</span>
+                            @if (canToggle)
+                            {
+                                <form asp-controller="Climate" asp-action="ToggleActuator" method="post">
+                                    <input type="hidden" name="actuatorId" value="@a.Id" />
+                                    <input type="hidden" name="returnUrl" value="@Url.Action("Topology", "Climate")" />
+                                    <button type="submit" class="btn sec sm" aria-label="@T(a.On ? "z.turnoff" : "z.turnon") @a.Name">@T(a.On ? "z.turnoff" : "z.turnon")</button>
+                                </form>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
 </article>

@@ -1,3 +1,18 @@
-@* Server-rendered VPD track. Model = VPD (double?). The marker position is set by charts.js from data-pos (no inline style, strict CSP). *@
+@* Server-rendered VPD track gauge with scale labels. The marker position is set by charts.js from data-pos. *@
 @model double?
-<div class="trk" aria-hidden="true"><i></i><i></i><i class="opt"></i><i></i><i></i>@if (Model != null) {<span class="pt @ViewFormat.Tone(ClimateRules.Band(Model.Value))" data-pos="@ViewFormat.Pos(Model)"></span>}</div>
+<div class="vpd-slider-wrap" aria-hidden="true">
+    <div class="trk">
+        <i></i><i></i><i class="opt"></i><i></i><i></i>
+        @if (Model != null)
+        {
+            <span class="pt @ViewFormat.Tone(ClimateRules.Band(Model.Value))" data-pos="@ViewFormat.Pos(Model)" title="VPD: @ViewFormat.N(Model, 2) kPa"></span>
+        }
+    </div>
+    <div class="trk-scale">
+        <span class="ts-mark ts-0">0.0</span>
+        <span class="ts-mark ts-opt-s">0.8</span>
+        <span class="ts-target">Target</span>
+        <span class="ts-mark ts-opt-e">1.25</span>
+        <span class="ts-mark ts-max">2.0+</span>
+    </div>
+</div>

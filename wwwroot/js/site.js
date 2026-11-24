@@ -109,7 +109,25 @@
     b.addEventListener("click", function () { window.print(); });
   });
 
-  // 7. Account menu dismiss
+  // 7. VPD Marker Slider Initialization across all views
+  function initVpdSliders() {
+    document.querySelectorAll(".pt[data-pos]").forEach(function (p) {
+      var pos = p.getAttribute("data-pos");
+      if (pos) {
+        requestAnimationFrame(function () {
+          p.style.left = pos + "%";
+          p.classList.add("ready");
+        });
+      }
+    });
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initVpdSliders);
+  } else {
+    initVpdSliders();
+  }
+
+  // 8. Account menu dismiss
   var um = document.querySelector("details.um");
   if (!um) return;
   document.addEventListener("click", function (e) { if (!um.contains(e.target)) um.open = false; });

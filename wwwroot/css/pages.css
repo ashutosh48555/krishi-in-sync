@@ -32,9 +32,8 @@ button.zn:focus-visible { outline-offset: 4px; }
 .st.mute { background: var(--surface-2); color: var(--text-2); }
 .pt { left: 0; opacity: 0; }
 .pt.ready { opacity: 1; }
-.trk i:nth-child(1), .trk i:nth-child(2), .trk i:nth-child(5) { width: 20%; }
-.trk i:nth-child(3) { width: 22.5%; }
-.trk i:nth-child(4) { width: 17.5%; }
+.ztable .trk-scale { display: none; }
+.ztable .vpd-slider-wrap { margin: 0; }
 .met .v.sm { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 20px; }
 .met .v.sm .sim { margin: 0; }
 .an { display: block; width: 100%; font: 400 12.5px var(--f-b); color: var(--text-3); letter-spacing: 0; }
@@ -85,7 +84,6 @@ button.zn:focus-visible { outline-offset: 4px; }
   .ztable td::before { content: attr(data-label); display: block; font-size: var(--fs-xs); color: var(--text-3); font-weight: 400; font-family: var(--f-b); letter-spacing: 0; }
   .ztable td.vc::before { margin-bottom: 8px; }
   .ztable td:nth-child(5)::before { margin-bottom: 4px; }
-  .pt { top: -4px; }
 }
 @media (max-width: 640px) {
   .signin { width: 36px; height: 36px; padding: 0; justify-content: center; min-height: 36px; }

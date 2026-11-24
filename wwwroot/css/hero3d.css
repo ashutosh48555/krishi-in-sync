@@ -28,9 +28,12 @@
 #zbs { display: flex; gap: 2px; }
 .zb { font: 500 13px var(--f-b); border: 0; background: transparent; color: var(--text-2); padding: 7px 14px; border-radius: var(--r-pill); cursor: pointer; white-space: nowrap; transition: background-color .25s, color .25s; }
 .zb[aria-pressed="true"] { background: var(--text); color: var(--bg); }
-.tm { display: flex; gap: 8px; align-items: center; padding: 0 12px 0 14px; color: var(--text-2); font-size: var(--fs-xs); border-left: 1px solid var(--line); }
-.tm input { width: 130px; accent-color: var(--accent); }
-.tl { min-width: 100px; font-variant-numeric: tabular-nums; }
+.tm { display: flex; gap: 10px; align-items: center; padding: 0 14px; color: var(--text-2); font-size: var(--fs-xs); border-left: 1px solid var(--line); }
+.tm input[type="range"] { -webkit-appearance: none; appearance: none; width: 135px; height: 6px; background: var(--line-2); border-radius: 3px; outline: none; cursor: pointer; vertical-align: middle; }
+.tm input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--surface), 0 2px 4px rgba(0,0,0,0.35); cursor: pointer; transition: transform 0.15s ease; }
+.tm input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.tm input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); box-shadow: 0 2px 4px rgba(0,0,0,0.35); cursor: pointer; }
+.tl { min-width: 90px; font: 500 13px var(--f-b); font-variant-numeric: tabular-nums; color: var(--text); }
 .fallback { position: absolute; inset: 0; display: none; place-items: center; text-align: center; padding: 24px; color: var(--text-2); z-index: 6; }
 .stage.nogl canvas { display: none; }
 .stage.nogl .fallback { display: grid; }
@@ -43,7 +46,7 @@
   .stage { height: clamp(480px, 72vh, 620px); }
   .bar { flex-wrap: wrap; justify-content: center; border-radius: 22px; bottom: 10px; }
   .tm { border-left: 0; padding: 0 8px; }
-  .tm input { width: 90px; }
+  .tm input[type="range"] { width: 90px; }
   .tl { min-width: 0; }
   .zb { padding: 6px 10px; font-size: var(--fs-xs); }
 }
