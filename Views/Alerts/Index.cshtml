@@ -20,7 +20,23 @@
     </nav>
 </div>
 
+<div class="search-bar-row">
+    <div class="search-box">
+        @await Html.Icon("search", 16)
+        <input type="search" id="alert-search" class="inp" placeholder="@T("al.search")" aria-label="Search alerts" />
+    </div>
+    <span id="search-count" class="search-count" aria-live="polite"></span>
+    @if (Model.CanAcknowledge && Model.Alerts.Any(a => !a.IsAcknowledged))
+    {
+        <form asp-action="AcknowledgeAll" method="post" data-confirm="Acknowledge all open alerts in this view?">
+            <input type="hidden" name="filter" value="@Model.Filter" />
+            <button type="submit" class="btn sec sm">@await Html.Icon("check-check", 14)@T("al.ackall")</button>
+        </form>
+    }
+</div>
+
 <section class="card c12 listcard">
+    <div id="alert-no-match" class="al" hidden><span class="ico watch">@await Html.Icon("triangle-alert")</span><div><b>No matching alerts found</b><span>Try searching with another keyword.</span></div></div>
     @if (Model.Alerts.Count == 0)
     {
         <div class="al"><span class="ico good">@await Html.Icon("check")</span><div><b>@T("a.empty")</b></div></div>
@@ -28,7 +44,7 @@
     @foreach (var a in Model.Alerts)
     {
         var tone = a.IsAcknowledged ? "good" : ViewFormat.Tone(a.Severity);
-        <article class="al@(a.IsAcknowledged ? " done" : "")">
+        <article class="al@(a.IsAcknowledged ? " done" : "")" data-alert-text="@a.Title @a.Advice @a.ZoneName @a.Severity">
             <span class="ico @tone">@await Html.Icon(a.IsAcknowledged ? "check" : a.Severity == "Info" ? "bell" : "triangle-alert")</span>
             <div class="abody">
                 <b>@a.Title</b>

@@ -85,4 +85,18 @@ public class AlertsController : Controller
         TempData["SuccessMessage"] = HttpContext.T("al.acked", alert.Title);
         return RedirectToAction(nameof(Index), new { filter = AlertFilter.Normalize(filter) });
     }
+
+    /// <summary>Acknowledge all open alerts in the current view.</summary>
+    [HttpPost("AcknowledgeAll")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AcknowledgeAll(string? filter)
+    {
+        if (!Permissions.IsOperator(User)) return NotFound();
+        var openAlerts = await _context.ClimateAlerts.Where(a => !a.IsAcknowledged).ToListAsync();
+        foreach (var a in openAlerts) a.IsAcknowledged = true;
+        await _context.SaveChangesAsync();
+        TempData["SuccessMessage"] = HttpContext.T("al.ackedall");
+        return RedirectToAction(nameof(Index), new { filter = AlertFilter.Normalize(filter) });
+    }
 }

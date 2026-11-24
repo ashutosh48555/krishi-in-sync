@@ -104,4 +104,39 @@ public class AutomationController : Controller
         Flash("au.t.deleted");
         return RedirectToAction(nameof(Index));
     }
+
+    /// <summary>Evaluator / Demo helper: Simulates a high-humidity event, triggers rules & updates actuators.</summary>
+    [HttpPost("SimulateAnomaly")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SimulateAnomaly()
+    {
+        if (!Permissions.IsOperator(User)) return NotFound();
+        var zone = await _context.Zones.FirstOrDefaultAsync();
+        if (zone == null) return NotFound();
+
+        var anomalyLog = new SensorLog
+        {
+            ZoneId = zone.ZoneId,
+            Temperature = 28.5,
+            Humidity = 89.0,
+            VPD = ClimateRules.Vpd(28.5, 89.0),
+            SoilMoisture = 55.0,
+            SolarRadiation = 320,
+            SoilTemperature = 22.0,
+            WindSpeed = 0.2,
+            TimestampIST = IstClock.Now
+        };
+        _context.SensorLogs.Add(anomalyLog);
+        await _context.SaveChangesAsync();
+
+        var weather = HttpContext.RequestServices.GetService<IOpenMeteoService>();
+        if (weather != null)
+        {
+            await weather.EvaluateAutomationRulesAsync(new List<SensorLog> { anomalyLog });
+        }
+
+        TempData["SuccessMessage"] = "Microclimate anomaly simulated! High humidity (89%) logged: rules evaluated & actuators engaged.";
+        return RedirectToAction(nameof(Index));
+    }
 }

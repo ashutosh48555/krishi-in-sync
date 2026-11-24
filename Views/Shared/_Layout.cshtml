@@ -24,11 +24,19 @@
         <partial name="_Nav" />
         @if (TempData["SuccessMessage"] is string ok)
         {
-            <div class="toast" role="status" data-toast>@await Html.Icon("check", 16)<span>@ok</span></div>
+            <div class="toast" role="status" data-toast>
+                @await Html.Icon("check", 16)<span>@ok</span>
+                <button type="button" class="toast-close" data-close-toast aria-label="Dismiss">@await Html.Icon("x", 14)</button>
+                <div class="toast-progress"></div>
+            </div>
         }
         @if (TempData["ErrorMessage"] is string bad)
         {
-            <div class="toast bad" role="alert" data-toast>@await Html.Icon("triangle-alert", 16)<span>@bad</span></div>
+            <div class="toast bad" role="alert" data-toast>
+                @await Html.Icon("triangle-alert", 16)<span>@bad</span>
+                <button type="button" class="toast-close" data-close-toast aria-label="Dismiss">@await Html.Icon("x", 14)</button>
+                <div class="toast-progress"></div>
+            </div>
         }
         <main id="main">
             @RenderBody()
@@ -38,6 +46,7 @@
             <a asp-controller="Home" asp-action="Privacy">@Context.T("foot.privacy")</a>
         </footer>
     </div>
+    <partial name="_VpdModal" />
     <script src="~/js/theme.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

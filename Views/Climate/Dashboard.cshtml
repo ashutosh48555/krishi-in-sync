@@ -34,11 +34,13 @@
         }
         <span class="chip nm"><span class="dot @(Model.AmbientTemp == null || Model.AmbientIsStale ? "off" : null)"></span><span>@chip</span></span>
         <span class="chip nm">@(Model.UpdatedAt.Length > 0 ? string.Format(T("dash.updated"), Model.UpdatedAt) : T("dash.noupdate"))</span>
+        <button type="button" class="btn sec sm" data-open-dialog="vpd-dialog" title="Open Agronomist VPD & Microclimate Guide">@await Html.Icon("book-open", 14)<span>@T("guide.btn")</span></button>
+        <button type="button" class="btn sec sm" data-action="print" title="Print Agronomist Summary Report">@await Html.Icon("printer", 14)<span>@T("dash.print")</span></button>
         @if (User.Identity?.IsAuthenticated == true)
         {
             <form asp-controller="Climate" asp-action="RefreshTelemetry" method="post">
                 <input type="hidden" name="returnUrl" value="@Url.Action("Dashboard", "Climate")" />
-                <button type="submit" class="btn sm">@await Html.Icon("refresh-cw", 14)@T("dash.refresh")</button>
+                <button type="submit" class="btn sm" data-loading-text="Syncing Open-Meteo...">@await Html.Icon("refresh-cw", 14)@T("dash.refresh")</button>
             </form>
         }
         else

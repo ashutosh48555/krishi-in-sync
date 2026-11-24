@@ -40,6 +40,8 @@
             </select>
             <button type="submit" class="btn sec sm">@T("h.show")</button>
         </form>
+        <button type="button" class="btn sec sm" data-open-dialog="vpd-dialog">@await Html.Icon("book-open", 14)<span>@T("guide.btn")</span></button>
+        <button type="button" class="btn sec sm" data-action="print">@await Html.Icon("printer", 14)<span>@T("dash.print")</span></button>
         <a class="btn sec sm" asp-action="ExportCsv" asp-route-range="@Model.Range" asp-route-zoneId="@Model.SelectedZoneId">@await Html.Icon("download", 14)@T("h.csv")</a>
     </div>
 </div>

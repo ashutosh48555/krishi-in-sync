@@ -1,0 +1,79 @@
+@* Agronomist Handbook & VPD Guide Dialog. Accessible modal dialog explaining microclimates. *@
+<dialog id="vpd-dialog" class="modal-dialog" aria-labelledby="vpd-modal-title">
+    <div class="modal-content">
+        <header class="modal-header">
+            <div class="modal-title-wrap">
+                <span class="modal-icon">@await Html.Icon("book-open", 20)</span>
+                <div>
+                    <h2 id="vpd-modal-title" class="modal-title">Agronomist Handbook: VPD & Microclimate Guide</h2>
+                    <p class="modal-sub">How Vapor Pressure Deficit governs plant transpiration, nutrient intake & crop health in Indian agriculture.</p>
+                </div>
+            </div>
+            <button type="button" class="modal-close" data-close-dialog aria-label="Close guide">
+                @await Html.Icon("x", 18)
+            </button>
+        </header>
+
+        <div class="modal-body">
+            <!-- Concept Section -->
+            <section class="modal-sec">
+                <h3>What is Vapor Pressure Deficit (VPD)?</h3>
+                <p>
+                    VPD measures the drying power of the air. It is the mathematical difference between the moisture saturated air can hold at leaf temperature (saturation vapor pressure, <em>e<sub>s</sub></em>) and the actual moisture present in ambient air (<em>e<sub>a</sub></em>). Unlike raw Relative Humidity, VPD dictates the exact physiological rate of crop transpiration and xylem sap flow.
+                </p>
+                <div class="formula-box">
+                    <code>e<sub>s</sub> = 0.61078 &times; exp(17.27 &times; T / (T + 237.3))</code><br />
+                    <code>VPD = e<sub>s</sub> &times; (1 - RH / 100)  [kPa]</code>
+                </div>
+            </section>
+
+            <!-- Physiological Bands -->
+            <section class="modal-sec">
+                <h3>The 3 Physiological Microclimate Bands</h3>
+                <div class="bands-grid">
+                    <div class="band-card band-low">
+                        <div class="band-hd">
+                            <span class="st crit">&lt; 0.8 kPa · Low (Saturated)</span>
+                        </div>
+                        <p><strong>Agronomic Impact:</strong> The air is nearly saturated. Plant transpiration stalls, preventing calcium and micronutrient delivery to growing shoots. High risk of foliar condensation.</p>
+                        <p class="band-risk"><strong>Disease Threat:</strong> Rice Blast (<em>Magnaporthe oryzae</em>), Powdery Mildew, Botrytis Fruit Rot.</p>
+                        <p class="band-fix"><strong>Remedial Step:</strong> Activate exhaust ventilation fans, introduce gentle heat, avoid overhead misting.</p>
+                    </div>
+
+                    <div class="band-card band-opt">
+                        <div class="band-hd">
+                            <span class="st good">0.8 – 1.25 kPa · Optimal (Healthy)</span>
+                        </div>
+                        <p><strong>Agronomic Impact:</strong> The ideal agricultural sweet spot. Leaf stomata remain wide open without water stress. Maximum photosynthetic assimilation and steady nutrient absorption.</p>
+                        <p class="band-risk"><strong>Target Crops:</strong> Pusa Basmati 1121 nursery, Polyhouse Strawberries, Aeroponic Himsona Tomatoes.</p>
+                        <p class="band-fix"><strong>Remedial Step:</strong> Maintain automatic climate setpoints. Ensure baseline root irrigation.</p>
+                    </div>
+
+                    <div class="band-card band-high">
+                        <div class="band-hd">
+                            <span class="st watch">&gt; 1.25 kPa · High (Water Stress)</span>
+                        </div>
+                        <p><strong>Agronomic Impact:</strong> Air pulls moisture faster than roots can absorb. Crops enter defensive stress: stomata close to halt desiccation, shutting down carbon dioxide uptake.</p>
+                        <p class="band-risk"><strong>Physiological Loss:</strong> Leaf curling, blossom drop, stunted vegetative growth, blossom-end rot.</p>
+                        <p class="band-fix"><strong>Remedial Step:</strong> Engage high-pressure misting / fogger nozzles, pull thermal shade screens.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Targeted Indian Crops -->
+            <section class="modal-sec">
+                <h3>Indian Agricultural Zone Profiles</h3>
+                <ul class="crops-list">
+                    <li><strong>Polyhouse Nursery (Pusa Basmati 1121):</strong> Target: 24.5 °C, 75% RH (VPD ~0.77 kPa). Protects tender seedlings against diurnal temperature extremes before open-field transplanting.</li>
+                    <li><strong>Hydroponic Berry Bench (San Andreas Strawberry):</strong> Target: 21.0 °C, 65% RH (VPD ~0.87 kPa). Regulates sugar brix accumulation and prevents grey mold sporulation.</li>
+                    <li><strong>Aeroponic Vertical Tower (Himsona Tomato):</strong> Target: 23.0 °C, 70% RH (VPD ~0.84 kPa). Ensures steady calcium xylem flow to developing fruit clusters.</li>
+                </ul>
+            </section>
+        </div>
+
+        <footer class="modal-footer">
+            <button type="button" class="btn sec" data-close-dialog>Close Handbook</button>
+            <a asp-controller="Climate" asp-action="Analytics" class="btn">View Climate History</a>
+        </footer>
+    </div>
+</dialog>

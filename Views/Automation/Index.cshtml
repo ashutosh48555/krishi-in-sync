@@ -13,6 +13,18 @@
         <h1 class="sec-title">@T("au.title")</h1>
         <p class="sub">@T("au.sub")</p>
     </div>
+    <div class="dact">
+        <button type="button" class="btn sec sm" data-open-dialog="vpd-dialog">@await Html.Icon("book-open", 14)<span>@T("guide.btn")</span></button>
+        @if (User.Identity?.IsAuthenticated == true && Permissions.IsOperator(User))
+        {
+            <form asp-action="SimulateAnomaly" method="post" class="d-inline" data-confirm="Simulate microclimate anomaly (89% humidity in Zone 1) to test rule trigger and alert creation?">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn sec sm btn-sim" title="Simulate microclimate anomaly to test automated triggers">
+                    @await Html.Icon("zap", 14)@T("au.simulate.btn")
+                </button>
+            </form>
+        }
+    </div>
 </div>
 
 <div class="bento">
@@ -115,6 +127,12 @@
 
         @if (User.Identity?.IsAuthenticated == true)
         {
+            <div class="presets-row mb-12">
+                <span class="sub preset-label">@T("au.presets.title")</span>
+                <button type="button" class="btn-preset" data-preset-metric="Relative Humidity" data-preset-op=">" data-preset-val="80" data-preset-act="Exhaust" data-preset-on="true" data-preset-note="Monsoon fungal ventilation">⚡ Monsoon</button>
+                <button type="button" class="btn-preset" data-preset-metric="Temperature" data-preset-op="<" data-preset-val="12" data-preset-act="Exhaust" data-preset-on="false" data-preset-note="Winter frost cold shield">❄️ Frost</button>
+                <button type="button" class="btn-preset" data-preset-metric="VPD" data-preset-op=">" data-preset-val="1.3" data-preset-act="Misting" data-preset-on="true" data-preset-note="High VPD misting transpiration boost">💧 Mist</button>
+            </div>
             <form asp-action="CreateRule" method="post" class="form-grid">
                 @Html.AntiForgeryToken()
                 @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
