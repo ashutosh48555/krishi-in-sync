@@ -64,9 +64,11 @@ public partial class OpenMeteoService : IOpenMeteoService
     /// Ambient reading for the dashboard: live Open-Meteo when reachable, else the newest stored
     /// Open Field log flagged as stale. Null only when neither exists. Never throws.
     /// </summary>
-    public async Task<AmbientReading?> GetAmbientAsync()
+    public async Task<AmbientReading?> GetAmbientAsync(double? latitude = null, double? longitude = null)
     {
-        var live = (await FetchLiveWeatherAsync())?.Current;
+        double lat = latitude ?? 28.6139;
+        double lon = longitude ?? 77.2090;
+        var live = (await FetchLiveWeatherAsync(lat, lon))?.Current;
         if (live != null)
             return new AmbientReading(live.Temperature2m, live.RelativeHumidity2m, live.WindSpeed10m,
                 live.SurfacePressure, IstClock.Now, false);
@@ -114,12 +116,14 @@ public partial class OpenMeteoService : IOpenMeteoService
     /// Ingests live telemetry, applies C# microclimate offsets for 3 farm zones,
     /// logs readings to database, and triggers automation rules.
     /// </summary>
-    public async Task<List<SensorLog>> IngestAndSyncTelemetryAsync()
+    public async Task<List<SensorLog>> IngestAndSyncTelemetryAsync(double? latitude = null, double? longitude = null)
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AgriSyncDbContext>();
 
-        var weatherData = await FetchLiveWeatherAsync();
+        double lat = latitude ?? 28.6139;
+        double lon = longitude ?? 77.2090;
+        var weatherData = await FetchLiveWeatherAsync(lat, lon);
         var current = weatherData?.Current;
         if (current == null)
             return new List<SensorLog>(); // no live data: append nothing rather than invent readings

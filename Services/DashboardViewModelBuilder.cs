@@ -24,26 +24,47 @@ public class DashboardViewModelBuilder
         : name.Contains("Open", StringComparison.OrdinalIgnoreCase) ? "open"
         : name.Contains("Drip", StringComparison.OrdinalIgnoreCase) ? "drip" : "";
 
-    public async Task<DashboardViewModel> BuildAsync(string lang, string? farm = null)
+    public async Task<DashboardViewModel> BuildAsync(string lang, string? farm = null, Microsoft.AspNetCore.Http.HttpContext? httpContext = null)
     {
         var nowIst = IstClock.Now;
         var zones = await _context.Zones.Include(z => z.Actuators).AsNoTracking().OrderBy(z => z.ZoneId).ToListAsync();
         var clusters = await _context.FarmClusters.AsNoTracking().OrderBy(c => c.ClusterId).ToListAsync();
         var farms = clusters.Select(c => c.Name).ToList();
         if (farms.Count == 0) farms.Add(DefaultFarm);
-        var selected = !string.IsNullOrEmpty(farm) && farms.Contains(farm) ? farm : farms[0];
+
+        string? cookieFarm = httpContext?.Request.Cookies["krishi_farm"];
+        var selected = !string.IsNullOrEmpty(farm) && farms.Contains(farm) ? farm
+            : (!string.IsNullOrEmpty(cookieFarm) && farms.Contains(cookieFarm) ? cookieFarm : farms[0]);
+
+        if (httpContext != null && !string.IsNullOrEmpty(selected))
+        {
+            try
+            {
+                httpContext.Response.Cookies.Append("krishi_farm", selected, new Microsoft.AspNetCore.Http.CookieOptions
+                {
+                    Expires = DateTimeOffset.UtcNow.AddDays(30),
+                    SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax,
+                    HttpOnly = true
+                });
+            }
+            catch { /* Ignore if headers sent */ }
+        }
+
+        var selectedCluster = clusters.FirstOrDefault(c => c.Name == selected);
+        string place = !string.IsNullOrWhiteSpace(selectedCluster?.Region) ? selectedCluster.Region
+            : (selected.Contains(" - ") ? selected[(selected.LastIndexOf(" - ", StringComparison.Ordinal) + 3)..] : selected);
 
         var vm = new DashboardViewModel
         {
             CurrentLanguage = lang,
             SelectedFarm = selected,
-            SelectedRegion = clusters.FirstOrDefault(c => c.Name == selected)?.Region ?? string.Empty,
-            Place = selected.Contains(" - ") ? selected[(selected.LastIndexOf(" - ", StringComparison.Ordinal) + 3)..] : selected,
+            SelectedRegion = selectedCluster?.Region ?? string.Empty,
+            Place = place,
             AvailableFarms = farms,
             ActiveAlertsCount = await _context.ClimateAlerts.CountAsync(a => !a.IsAcknowledged)
         };
 
-        var ambient = await _weather.GetAmbientAsync();
+        var ambient = await _weather.GetAmbientAsync(selectedCluster?.Latitude, selectedCluster?.Longitude);
         if (ambient != null)
         {
             vm.AmbientTemp = ambient.Temp;

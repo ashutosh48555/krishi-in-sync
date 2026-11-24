@@ -129,9 +129,22 @@
 
   // 8. Account menu dismiss
   var um = document.querySelector("details.um");
-  if (!um) return;
-  document.addEventListener("click", function (e) { if (!um.contains(e.target)) um.open = false; });
-  um.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { um.open = false; um.querySelector("summary").focus(); }
+  if (um) {
+    document.addEventListener("click", function (e) { if (!um.contains(e.target)) um.open = false; });
+    um.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { um.open = false; um.querySelector("summary").focus(); }
+    });
+  }
+
+  // 9. Quick Demo Credentials Filler
+  document.querySelectorAll("[data-fill-email]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var email = btn.getAttribute("data-fill-email");
+      var pass = btn.getAttribute("data-fill-pass");
+      var emailInput = document.getElementById("Email");
+      var passInput = document.getElementById("Password");
+      if (emailInput && email) emailInput.value = email;
+      if (passInput && pass) passInput.value = pass;
+    });
   });
 })();

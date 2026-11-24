@@ -28,7 +28,7 @@ public partial class ClimateController : Controller
     [HttpGet]
     [HttpGet("Dashboard")]
     public async Task<IActionResult> Dashboard([FromServices] DashboardViewModelBuilder builder, string? farm)
-        => View(await builder.BuildAsync(HttpContext.Lang(), farm));
+        => View(await builder.BuildAsync(HttpContext.Lang(), farm, HttpContext));
 
     /// <summary>
     /// Actuator manual toggle action.
@@ -54,11 +54,13 @@ public partial class ClimateController : Controller
     [HttpPost("RefreshTelemetry")]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RefreshTelemetry(string? returnUrl)
+    public async Task<IActionResult> RefreshTelemetry(string? returnUrl, string? farm)
     {
         try
         {
-            var logs = await _weatherService.IngestAndSyncTelemetryAsync();
+            var targetFarm = farm ?? Request.Cookies["krishi_farm"];
+            var cluster = await _context.FarmClusters.AsNoTracking().FirstOrDefaultAsync(c => c.Name == targetFarm);
+            var logs = await _weatherService.IngestAndSyncTelemetryAsync(cluster?.Latitude, cluster?.Longitude);
             if (logs.Count > 0)
                 TempData["SuccessMessage"] = string.Format(Localizer.T(HttpContext.Lang(), "toast.weather.refreshed"), logs.Count);
             else

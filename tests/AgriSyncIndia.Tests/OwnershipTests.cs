@@ -39,9 +39,9 @@ public class OwnershipTests : IDisposable
     {
         public int Toggled;
         public Task ToggleActuatorAsync(int id) { Toggled++; return Task.CompletedTask; }
-        public Task<List<SensorLog>> IngestAndSyncTelemetryAsync() => Task.FromResult(new List<SensorLog>());
+        public Task<List<SensorLog>> IngestAndSyncTelemetryAsync(double? latitude = null, double? longitude = null) => Task.FromResult(new List<SensorLog>());
         public Task<OpenMeteoResponse?> FetchLiveWeatherAsync(double latitude = 28.6139, double longitude = 77.2090) => Task.FromResult<OpenMeteoResponse?>(null);
-        public Task<AmbientReading?> GetAmbientAsync() => Task.FromResult<AmbientReading?>(null);
+        public Task<AmbientReading?> GetAmbientAsync(double? latitude = null, double? longitude = null) => Task.FromResult<AmbientReading?>(null);
         public double CalculateVPD(double t, double rh) => 0;
         public (string BadgeText, string BadgeCssClass, string Description) GetVpdStatus(double v) => ("", "", "");
         public Task EvaluateAutomationRulesAsync(List<SensorLog> l) => Task.CompletedTask;

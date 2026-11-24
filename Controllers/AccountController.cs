@@ -98,6 +98,74 @@ public partial class AccountController : Controller
         return RedirectToAction("Dashboard", "Climate");
     }
 
+    [HttpGet("Register")]
+    [HttpGet("SignUp")]
+    public async Task<IActionResult> Register(string? returnUrl)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Dashboard", "Climate");
+        }
+
+        ViewBag.Clusters = await _context.FarmClusters.AsNoTracking().Select(c => c.Name).ToListAsync();
+        ViewData["ReturnUrl"] = returnUrl;
+        return View(new RegisterViewModel { ReturnUrl = returnUrl });
+    }
+
+    [HttpPost("Register")]
+    [HttpPost("SignUp")]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> Register(RegisterViewModel model, string? returnUrl)
+    {
+        ViewData["ReturnUrl"] = returnUrl;
+
+        if (!ModelState.IsValid)
+        {
+            ViewBag.Clusters = await _context.FarmClusters.AsNoTracking().Select(c => c.Name).ToListAsync();
+            return View(model);
+        }
+
+        var normalizedEmail = model.Email.Trim().ToLowerInvariant();
+        if (await _context.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail))
+        {
+            ModelState.AddModelError(nameof(model.Email), Localizer.T(HttpContext.Lang(), "auth.email_exists"));
+            ViewBag.Clusters = await _context.FarmClusters.AsNoTracking().Select(c => c.Name).ToListAsync();
+            return View(model);
+        }
+
+        var user = new User
+        {
+            FullName = model.FullName.Trim(),
+            Email = normalizedEmail,
+            Role = string.IsNullOrWhiteSpace(model.Role) ? "Agronomist" : model.Role.Trim(),
+            AffiliatedFarmCluster = model.AffiliatedFarmCluster,
+            CreatedAt = IstClock.Now
+        };
+        user.PasswordHash = _passwordHasher.HashPassword(user, model.Password);
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var authProperties = new AuthenticationProperties
+        {
+            IsPersistent = true,
+            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(14)
+        };
+
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, UserProvisioning.BuildPrincipal(user), authProperties);
+
+        _logger.LogInformation("New user registered successfully: {UserId} ({Email})", user.UserId, user.Email);
+        TempData["SuccessMessage"] = string.Format(Localizer.T(HttpContext.Lang(), "toast.register.welcome"), user.FullName);
+
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return Redirect(returnUrl);
+        }
+
+        return RedirectToAction("Dashboard", "Climate");
+    }
+
     /// <summary>Clears the app cookie; when Clerk is on, the callback page then ends the Clerk session too.</summary>
     [HttpPost("Logout")]
     [ValidateAntiForgeryToken]

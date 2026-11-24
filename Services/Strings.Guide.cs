@@ -196,5 +196,19 @@ public static partial class Strings
         dict["toast.login.welcome"] = new("Welcome back, {0}! Logged in as {1}.", "वापसी पर स्वागत है, {0}! {1} के रूप में साइन इन हैं।", "ਜੀ ਆਇਆਂ ਨੂੰ, {0}! {1} ਵਜੋਂ ਸਾਈਨ ਇਨ ਹੋ।");
         dict["toast.logout"] = new("You have been logged out safely.", "आप सुरक्षित रूप से साइन आउट हो चुके हैं।", "ਤੁਸੀਂ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸਾਈਨ ਆਊਟ ਹੋ ਗਏ ਹੋ।");
         dict["au.t.anomaly"] = new("Microclimate anomaly simulated! High humidity (89%) logged: rules evaluated & actuators engaged.", "माइक्रॉक्लाइमेट असामान्यता का अनुकरण! उच्च नमी (89%) दर्ज: नियम निष्पादित और एक्चुएटर चालू हुए।", "ਮਾਈਕ੍ਰੋਕਲਾਈਮੇਟ ਅਸਧਾਰਨਤਾ ਦੀ ਨਕਲ! ਉੱਚ ਨਮੀ (89%) ਦਰਜ: ਨਿਯਮ ਲਾਗੂ ਅਤੇ ਐਕਚੂਏਟਰ ਚਾਲੂ ਹੋਏ।");
+        dict["login.tab.signin"] = new("Sign In", "साइन इन", "ਸਾਈਨ ਇਨ");
+        dict["login.tab.signup"] = new("Create Account", "खाता बनाएं", "ਖਾਤਾ ਬਣਾਓ");
+        dict["login.no_account"] = new("Don't have an account? Create one", "खाता नहीं है? नया बनाएं", "ਖਾਤਾ ਨਹੀਂ ਹੈ? ਨਵਾਂ ਬਣਾਓ");
+        dict["register.title"] = new("Create Your Account", "नया खाता बनाएं", "ਨਵਾਂ ਖਾਤਾ ਬਣਾਓ");
+        dict["register.sub"] = new("Join Krishi Sync to monitor farm microclimates and configure automation.", "कृषि सिंक से जुड़कर माइक्रॉक्लाइमेट की निगरानी और ऑटोमेशन सेट करें।", "ਕ੍ਰਿਸ਼ੀ ਸਿੰਕ ਨਾਲ ਜੁੜ ਕੇ ਖੇਤ ਦੇ ਮੌਸਮ ਦੀ ਨਿਗਰਾਨੀ ਅਤੇ ਆਟੋਮੇਸ਼ਨ ਸੈੱਟ ਕਰੋ।");
+        dict["register.name"] = new("Full Name", "पूरा नाम", "ਪੂਰਾ ਨਾਮ");
+        dict["register.role"] = new("Role / Position", "भूमिका / पद", "ਭੂਮਿਕਾ / ਅਹੁਦਾ");
+        dict["register.cluster"] = new("Primary Farm Cluster", "प्राथमिक कृषि क्लस्टर", "ਮੁੱਖ ਖੇਤੀ ਕਲੱਸਟਰ");
+        dict["register.confirm_pass"] = new("Confirm Password", "पासवर्ड की पुष्टि करें", "ਪਾਸਵਰਡ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ");
+        dict["register.terms"] = new("I agree to farm operations & microclimate monitoring protocols", "मैं कृषि संचालन और माइक्रॉक्लाइमेट निगरानी प्रोटोकॉल से सहमत हूं", "ਮੈਂ ਖੇਤੀ ਸੰਚਾਲਨ ਅਤੇ ਮਾਈਕ੍ਰੋਕਲਾਈਮੇਟ ਨਿਗਰਾਨੀ ਨਿਯਮਾਂ ਨਾਲ ਸਹਿਮਤ ਹਾਂ");
+        dict["register.submit"] = new("Create Account", "खाता बनाएं", "ਖਾਤਾ ਬਣਾਓ");
+        dict["register.have_account"] = new("Already have an account? Sign In", "पहले से खाता है? साइन इन करें", "ਪਹਿਲਾਂ ਤੋਂ ਖਾਤਾ ਹੈ? ਸਾਈਨ ਇਨ ਕਰੋ");
+        dict["auth.email_exists"] = new("An account with this email address already exists.", "इस ईमेल के साथ पहले से खाता मौजूद है।", "ਇਸ ਈਮੇਲ ਨਾਲ ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਮੌਜੂਦ ਹੈ।");
+        dict["toast.register.welcome"] = new("Welcome to Krishi Sync, {0}! Your account has been registered.", "कृषि सिंक में आपका स्वागत है, {0}! आपका खाता सफलतापूर्वक बन गया है।", "ਕ੍ਰਿਸ਼ੀ ਸਿੰਕ ਵਿੱਚ ਤੁਹਾਡਾ ਸੁਆਗਤ ਹੈ, {0}! ਤੁਹਾਡਾ ਖਾਤਾ ਸਫਲਤਾਪੂਰਵਕ ਬਣ ਗਿਆ ਹੈ।");
     }
 }

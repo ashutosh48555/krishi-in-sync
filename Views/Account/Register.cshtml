@@ -1,0 +1,85 @@
+@model RegisterViewModel
+@{
+    string T(string k) => Context.T(k);
+    ViewData["Title"] = T("register.title");
+    var clusters = ViewBag.Clusters as List<string> ?? new List<string>();
+}
+<section class="auth" aria-labelledby="auth-h">
+    <div class="auth-tabs" role="tablist">
+        <a asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" class="auth-tab" role="tab" aria-selected="false">@T("login.tab.signin")</a>
+        <a asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]" class="auth-tab on" role="tab" aria-selected="true">@T("login.tab.signup")</a>
+    </div>
+
+    <h1 class="sec-title" id="auth-h">@T("register.title")</h1>
+    <p class="sub">@T("register.sub")</p>
+
+    <form asp-controller="Account" asp-action="Register" method="post">
+        <input type="hidden" asp-for="ReturnUrl" />
+        <div asp-validation-summary="ModelOnly" class="err form-err" role="alert"></div>
+
+        <div class="field">
+            <label for="FullName">@T("register.name")</label>
+            <input id="FullName" name="FullName" type="text" required value="@Model.FullName" placeholder="e.g. Vikram Singh" />
+            <span asp-validation-for="FullName" class="err"></span>
+        </div>
+
+        <div class="field">
+            <label for="Email">@T("login.email")</label>
+            <input id="Email" name="Email" type="email" required autocomplete="username" value="@Model.Email" placeholder="e.g. vikram@agrisync.in" />
+            <span asp-validation-for="Email" class="err"></span>
+        </div>
+
+        <div class="field">
+            <label for="Role">@T("register.role")</label>
+            <select id="Role" name="Role">
+                <option value="Agronomist">Agronomist (Senior Researcher)</option>
+                <option value="Farm Manager">Farm Operations Manager</option>
+                <option value="Field Operator">Greenhouse Field Operator</option>
+                <option value="Research Scholar">ICAR / Agricultural Scholar</option>
+            </select>
+            <span asp-validation-for="Role" class="err"></span>
+        </div>
+
+        <div class="field">
+            <label for="AffiliatedFarmCluster">@T("register.cluster")</label>
+            <select id="AffiliatedFarmCluster" name="AffiliatedFarmCluster">
+                @if (clusters.Count == 0)
+                {
+                    <option value="IARI Pusa Smart Farm - New Delhi">IARI Pusa Smart Farm - New Delhi</option>
+                }
+                else
+                {
+                    @foreach (var c in clusters)
+                    {
+                        <option value="@c">@c</option>
+                    }
+                }
+            </select>
+            <span asp-validation-for="AffiliatedFarmCluster" class="err"></span>
+        </div>
+
+        <div class="field">
+            <label for="Password">@T("login.password")</label>
+            <input id="Password" name="Password" type="password" required autocomplete="new-password" placeholder="At least 6 characters" />
+            <span asp-validation-for="Password" class="err"></span>
+        </div>
+
+        <div class="field">
+            <label for="ConfirmPassword">@T("register.confirm_pass")</label>
+            <input id="ConfirmPassword" name="ConfirmPassword" type="password" required autocomplete="new-password" placeholder="Repeat password" />
+            <span asp-validation-for="ConfirmPassword" class="err"></span>
+        </div>
+
+        <label class="check">
+            <input asp-for="AcceptTerms" type="checkbox" required />
+            @T("register.terms")
+        </label>
+
+        <button type="submit" class="btn full">@T("register.submit")</button>
+    </form>
+
+    <div class="auth-footer">
+        <span>@T("register.have_account") </span>
+        <a asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]">&rarr;</a>
+    </div>
+</section>

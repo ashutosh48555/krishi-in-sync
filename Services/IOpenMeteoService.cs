@@ -6,13 +6,13 @@ public interface IOpenMeteoService
 {
     Task<OpenMeteoResponse?> FetchLiveWeatherAsync(double latitude = 28.6139, double longitude = 77.2090);
     
-    Task<AmbientReading?> GetAmbientAsync();
+    Task<AmbientReading?> GetAmbientAsync(double? latitude = null, double? longitude = null);
 
     double CalculateVPD(double temperatureC, double relativeHumidityPercent);
     
     (string BadgeText, string BadgeCssClass, string Description) GetVpdStatus(double vpdKpa);
     
-    Task<List<SensorLog>> IngestAndSyncTelemetryAsync();
+    Task<List<SensorLog>> IngestAndSyncTelemetryAsync(double? latitude = null, double? longitude = null);
     
     Task EvaluateAutomationRulesAsync(List<SensorLog> latestLogs);
 

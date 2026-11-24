@@ -9,7 +9,7 @@ namespace AgriSyncIndia.Tests;
 
 public class AuthorizationTests
 {
-    static readonly string[] AnonymousPosts = { "AccountController.Login", "AccountController.ClerkSession", "AccountController.Logout" };
+    static readonly string[] AnonymousPosts = { "AccountController.Login", "AccountController.ClerkSession", "AccountController.Logout", "AccountController.Register" };
 
     static IEnumerable<MethodInfo> Actions() =>
         typeof(HomeController).Assembly.GetTypes()
@@ -43,6 +43,19 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public void Register_action_is_gone() =>
-        Assert.Null(typeof(AccountController).GetMethod("Register"));
+    public void Register_action_requires_antiforgery()
+    {
+        var m = typeof(AccountController).GetMethod("Register", new[] { typeof(AgriSyncIndia.ViewModels.RegisterViewModel), typeof(string) })!;
+        Assert.NotNull(m.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>());
+        Assert.True(m.GetCustomAttributes<HttpPostAttribute>().Any());
+    }
+
+    [Fact]
+    public void Register_get_has_signup_alias()
+    {
+        var m = typeof(AccountController).GetMethod("Register", new[] { typeof(string) })!;
+        var routes = m.GetCustomAttributes<HttpGetAttribute>().Select(a => a.Template).ToList();
+        Assert.Contains("Register", routes);
+        Assert.Contains("SignUp", routes);
+    }
 }

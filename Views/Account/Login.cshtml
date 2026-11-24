@@ -6,6 +6,11 @@
     const string demoEmail = "dr.sharma@agrisync.in", demoPass = "AgriSync@123";
 }
 <section class="auth" aria-labelledby="auth-h">
+    <div class="auth-tabs" role="tablist">
+        <a asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" class="auth-tab on" role="tab" aria-selected="true">@T("login.tab.signin")</a>
+        <a asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]" class="auth-tab" role="tab" aria-selected="false">@T("login.tab.signup")</a>
+    </div>
+
     <h1 class="sec-title" id="auth-h">@T("login.title")</h1>
     <p class="sub">@T("login.sub")</p>
 
@@ -20,16 +25,28 @@
         <div asp-validation-summary="ModelOnly" class="err form-err" role="alert"></div>
         <div class="field">
             <label for="Email">@T("login.email")</label>
-            <input id="Email" name="Email" type="email" required autocomplete="username" value="@(demo ? demoEmail : Model.Email)" aria-describedby="Email-err" />
+            <input id="Email" name="Email" type="email" required autocomplete="username" value="@(demo ? demoEmail : Model.Email)" aria-describedby="Email-err" placeholder="name@agrisync.in" />
             <span asp-validation-for="Email" class="err" id="Email-err"></span>
         </div>
         <div class="field">
             <label for="Password">@T("login.password")</label>
-            <input id="Password" name="Password" type="password" required autocomplete="current-password" value="@(demo ? demoPass : null)" aria-describedby="Password-err" />
+            <input id="Password" name="Password" type="password" required autocomplete="current-password" value="@(demo ? demoPass : null)" aria-describedby="Password-err" placeholder="••••••••" />
             <span asp-validation-for="Password" class="err" id="Password-err"></span>
         </div>
         <label class="check"><input asp-for="RememberMe" type="checkbox" />@T("login.remember")</label>
         <button type="submit" class="btn full">@T("login.submit")</button>
     </form>
-    <p class="note demo-note">@Context.T("login.demo", demoEmail, demoPass)</p>
+
+    <div class="demo-pills" aria-label="Demo accounts">
+        <span class="dp-lbl">⚡ Quick Evaluator Demo Logins:</span>
+        <div class="dp-row">
+            <button type="button" class="btn sec xs" data-fill-email="dr.sharma@agrisync.in" data-fill-pass="AgriSync@123">👨‍🌾 Dr. Sharma (Manager)</button>
+            <button type="button" class="btn sec xs" data-fill-email="priya.verma@agrisync.in" data-fill-pass="AgriSync@123">🔬 Priya Verma (Agronomist)</button>
+        </div>
+    </div>
+
+    <div class="auth-footer">
+        <span>@T("login.no_account") </span>
+        <a asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]">@T("login.tab.signup") &rarr;</a>
+    </div>
 </section>
